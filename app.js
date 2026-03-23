@@ -23,6 +23,7 @@ const state = {
     },
     images: [], // { data, x, y, id, label }
     selectedImageIndex: null,
+    history: JSON.parse(localStorage.getItem('endo_history') || '[]'),
     metadata: {
         indicacion: '',
         sedacion: 'Sedación Consciente',
@@ -140,6 +141,36 @@ document.addEventListener('DOMContentLoaded', () => {
         tagOverlay.addEventListener('click', handleDiagramClick);
     }
 });
+
+// --- View Switching Logic ---
+
+function switchMainView(view) {
+    const newView = document.getElementById('dynamic-view');
+    const historyView = document.getElementById('history-view');
+    const newActions = document.getElementById('topbar-actions');
+    const historyActions = document.getElementById('history-actions');
+    const navNew = document.getElementById('nav-new');
+    const navHistory = document.getElementById('nav-history');
+
+    if (view === 'new') {
+        newView.style.display = 'block';
+        historyView.style.display = 'none';
+        newActions.style.display = 'flex';
+        historyActions.style.display = 'none';
+        navNew.classList.add('active');
+        navHistory.classList.remove('active');
+        document.getElementById('topbar-name').textContent = state.patient.nombre || "Nuevo Paciente";
+    } else {
+        newView.style.display = 'none';
+        historyView.style.display = 'block';
+        newActions.style.display = 'none';
+        historyActions.style.display = 'flex';
+        navNew.classList.remove('active');
+        navHistory.classList.add('active');
+        document.getElementById('topbar-name').textContent = "Base de Datos de Pacientes";
+        renderHistory();
+    }
+}
 
 function openFindings(organ) {
     currentOrgan = organ;
@@ -481,6 +512,9 @@ function generateReport() {
 
     body.innerHTML = html;
     modal.classList.add('active');
+
+    // Automatically save to history when report is generated
+    saveToHistory();
 }
 
 function closeReport() { document.getElementById('report-modal').classList.remove('active'); }
@@ -504,4 +538,111 @@ function printReport() {
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+}
+
+// --- History & Database Logic ---
+
+function saveToHistory() {
+    if(!state.patient.nombre) {
+        alert("Por favor, ingrese al menos el nombre del paciente para guardar.");
+        return;
+    }
+
+    const record = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString('es-ES'),
+        dateTime: new Date().toLocaleString('es-ES'),
+        patient: { ...state.patient },
+        clinical: { ...state.clinical },
+        metadata: { ...state.metadata },
+        quality: { ...state.quality },
+        diagnoses: document.getElementById('diag-final').value,
+        plan: state.plan,
+        findings: [ ...state.findings ]
+    };
+
+    state.history.unshift(record);
+    localStorage.setItem('endo_history', JSON.stringify(state.history));
+    alert("Estudio guardado exitosamente en el historial.");
+    renderHistory();
+}
+
+function renderHistory(filter = "") {
+    const body = document.getElementById('history-table-body');
+    const emptyState = document.getElementById('history-empty-state');
+    if(!body) return;
+
+    const filtered = state.history.filter(r => 
+        (r.patient.nombre && r.patient.nombre.toLowerCase().includes(filter.toLowerCase())) || 
+        (r.patient.dni && r.patient.dni.includes(filter))
+    );
+
+    if (filtered.length === 0) {
+        body.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    body.innerHTML = filtered.map((r, index) => `
+        <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px; font-size: 0.85rem;">${r.date}</td>
+            <td style="padding: 12px; font-weight: 500;">${r.patient.nombre || 'Sin nombre'}</td>
+            <td style="padding: 12px; font-size: 0.85rem; color: var(--text-muted);">${r.patient.dni || '-'}</td>
+            <td style="padding: 12px; font-size: 0.85rem;">${r.metadata.indicacion || '-'}</td>
+            <td style="padding: 12px; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.diagnoses || '-'}</td>
+            <td style="padding: 12px; text-align: center;">
+                <button class="btn btn-icon" onclick="deleteFromHistory(${r.id})" style="color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterHistory(val) { renderHistory(val); }
+
+function deleteFromHistory(id) {
+    if(confirm("¿Eliminar este registro?")) {
+        state.history = state.history.filter(r => r.id !== id);
+        localStorage.setItem('endo_history', JSON.stringify(state.history));
+        renderHistory();
+    }
+}
+
+function clearHistory() {
+    if(confirm("¿Borrar todo el historial?")) {
+        state.history = [];
+        localStorage.setItem('endo_history', JSON.stringify(state.history));
+        renderHistory();
+    }
+}
+
+function resetForm() {
+    if(confirm("¿Desea limpiar el formulario para un nuevo estudio?")) {
+        // Reset state
+        state.patient = { nombre:'', dni:'', fnacimiento:'', sexo:'', departamento:'', municipio:'', antecedentes:'', edad:'' };
+        state.findings = [];
+        state.images = [];
+        state.plan = '';
+        state.selectedImageIndex = null;
+        
+        // UI Clean up
+        document.querySelectorAll('input, select, textarea').forEach(el => el.value = '');
+        updateTopbar();
+        updateFindingsList();
+        renderGallery();
+        switchMainView('new');
+    }
+}
+
+function exportToCSV() {
+    if(state.history.length === 0) { alert("No hay datos."); return; }
+    const headers = ["ID", "Fecha", "Nombre", "DNI", "Edad", "Sexo", "ASA", "Indicación", "Diagnóstico"];
+    const rows = state.history.map(r => [r.id, r.date, r.patient.nombre, r.patient.dni, r.patient.edad, r.patient.sexo, r.clinical.asa, r.metadata.indicacion, (r.diagnoses || "").replace(/\n/g, " ")]);
+    let csv = "\uFEFF" + headers.join(";") + "\n";
+    rows.forEach(row => csv += row.map(cell => `"${cell || ''}"`).join(";") + "\n");
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Endoscopia_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
 }

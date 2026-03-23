@@ -17,8 +17,8 @@
                 <span>EndoReport</span>
             </div>
             <nav>
-                <a href="#" class="nav-item active"><i class="fa-solid fa-file-medical"></i> <span>Nuevo Estudio</span></a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-users"></i> <span>Pacientes</span></a>
+                <a href="#" class="nav-item active" id="nav-new" onclick="resetForm()"><i class="fa-solid fa-file-medical"></i> <span>Nuevo Estudio</span></a>
+                <a href="#" class="nav-item" id="nav-history" onclick="switchMainView('history')"><i class="fa-solid fa-users"></i> <span>Pacientes (Base de Datos)</span></a>
                 <a href="#" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Estadísticas</span></a>
                 <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i> <span>Configuración</span></a>
             </nav>
@@ -45,9 +45,13 @@
                         <span class="badge info">Endoscopia Digestiva Alta (EGD)</span>
                     </div>
                 </div>
-                <div class="actions">
-                    <button class="btn btn-secondary"><i class="fa-solid fa-save"></i> Guardar Borrador</button>
+                <div class="actions" id="topbar-actions">
+                    <button class="btn btn-secondary" onclick="saveToHistory()"><i class="fa-solid fa-save"></i> Guardar Borrador</button>
                     <button class="btn btn-primary" onclick="generateReport()"><i class="fa-solid fa-file-pdf"></i> Generar Reporte</button>
+                </div>
+                <div class="actions" id="history-actions" style="display: none;">
+                    <button class="btn btn-secondary" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> Exportar a Excel (CSV)</button>
+                    <button class="btn btn-outline" onclick="clearHistory()" style="color: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-trash"></i> Borrar Todo</button>
                 </div>
             </header>
 
@@ -327,6 +331,43 @@
                 </div>
             </div>
 
+            <!-- Vista de Historial de Pacientes -->
+            <div class="content-body" id="history-view" style="display: none; padding: 20px;">
+                <div class="card" style="max-width: 1000px; margin: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;"><i class="fa-solid fa-hospital-user"></i> Historial de Estudios Realizados</h3>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-primary" onclick="resetForm()" style="font-size: 0.8rem; padding: 8px 15px;"><i class="fa-solid fa-plus"></i> Nuevo Reporte</button>
+                            <div style="position: relative;">
+                                <i class="fa-solid fa-search" style="position: absolute; left: 10px; top: 12px; color: var(--text-muted);"></i>
+                                <input type="text" id="history-search" placeholder="Buscar por nombre o DNI..." oninput="filterHistory(this.value)" style="padding: 8px 10px 8px 35px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-dark); color: white; width: 250px;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="history-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 12px;">Fecha</th>
+                                    <th style="padding: 12px;">Nombre del Paciente</th>
+                                    <th style="padding: 12px;">DNI</th>
+                                    <th style="padding: 12px;">Indicación</th>
+                                    <th style="padding: 12px;">Diagnóstico</th>
+                                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="history-empty-state" style="text-align: center; padding: 50px; color: var(--text-muted); display: none;">
+                        <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <p>No hay estudios registrados todavía.</p>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
     <script src="mst_data.js"></script>

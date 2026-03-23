@@ -87,10 +87,45 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
 .mst-level { margin-bottom: 16px; padding: 12px; background-color: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border); }
 .mst-level h4 { margin-bottom: 10px; font-size: 0.95rem; color: var(--text-muted); }
 .mst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.label-btn {
+    text-align: left;
+    padding: 8px 12px;
+    background: #0f172a;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.custom-label-input {
+    margin-top: 5px;
+    padding: 8px;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-dark);
+    color: var(--text-main);
+}
 .mst-btn { padding: 8px 12px; background-color: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
 .mst-btn:hover { border-color: var(--primary); }
 .mst-btn.selected { background-color: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #60a5fa; font-weight: 500; }
 
+.diagram-panel {
+    width: 400px;
+    background: white;
+    border-radius: var(--radius-md);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid var(--border);
+    overflow: hidden;
+}
+
+#gi-diagram-container { position: relative; width: 100%; height: 100%; padding: 5px; }
+#gi-diagram-img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .finding-item { padding: 12px 16px; background-color: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 .finding-item .body p { font-size: 0.95rem; font-weight: 500; }
 .finding-item .body span { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
@@ -101,6 +136,100 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
 .report-section { margin-bottom: 20px; }
 .report-section h4 { background: #eee; padding: 5px 10px; margin-bottom: 10px; font-weight: bold; }
 .report-row { display: flex; margin-bottom: 5px; }
-.report-label { font-weight: bold; width: 150px; }
+.report-label { font-weight: bold; min-width: 200px; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Image Workspace Styles (Workstation Mode) */
+.image-workspace { height: 600px; }
+
+.img-tile {
+    background: var(--bg-dark);
+    border: 3px solid var(--border);
+    border-radius: 6px;
+    position: relative;
+    padding-bottom: 30px;
+    transition: all 0.2s;
+    cursor: pointer;
+    overflow: hidden;
+    height: 180px; /* FIXED HEIGHT TO PREVENT STRETCH */
+}
+
+.img-tile.selected {
+    border-color: #f1c40f;
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);
+}
+
+.img-tile img {
+    width: 100%;
+    height: 130px; /* SLIGHTLY SMALLER TO FIT LABEL */
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--border);
+}
+
+.tile-number {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: #f1c40f;
+    color: #000;
+    padding: 1px 6px;
+    font-weight: 800;
+    border-radius: 3px;
+    font-size: 11px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+.tile-label {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: var(--bg-card);
+    color: var(--text-main);
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 6px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top: 1px solid var(--border);
+}
+
+.remove-img {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.img-tile:hover .remove-img { opacity: 1; }
+
+/* Diagram Markers */
+.tag-box {
+    fill: #f1c40f;
+    stroke: #000;
+    stroke-width: 1.5;
+    rx: 2;
+}
+
+.tag-text {
+    fill: #000;
+    font-weight: 900;
+    font-size: 14px;
+    pointer-events: none;
+}

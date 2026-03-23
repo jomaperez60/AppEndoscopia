@@ -226,9 +226,12 @@ function updateAutoDiagnoses() {
     if (state.findings.length === 0) {
         diagArea.value = "Examen endoscópico normal hasta la porción evaluada.";
     } else {
-        const uniqueOrgans = [...new Set(state.findings.map(f => f.organ))];
+        const order = { 'Esófago': 1, 'Estómago': 2, 'Duodeno': 3 };
+        const sortedFindings = [...state.findings].sort((a, b) => order[a.organ] - order[b.organ]);
+        
+        const uniqueOrgans = [...new Set(sortedFindings.map(f => f.organ))];
         let diagText = `Hallazgos patológicos en: ${uniqueOrgans.join(', ')}.\n`;
-        state.findings.forEach(f => { diagText += `- ${f.organ}: ${f.description}\n`; });
+        sortedFindings.forEach(f => { diagText += `- ${f.organ}: ${f.description}\n`; });
         diagArea.value = diagText;
     }
 }
@@ -283,19 +286,19 @@ function generateReport() {
                 <div class="report-row"><div class="report-label">Extensión:</div> <div>Se intuba bajo visión directa hasta ${state.metadata.extension}</div></div>
             </div>
             <div class="report-section">
-                <h4>4. Indicadores de Calidad</h4>
+                <h4>4. Descripción Macroscópica</h4>
+                <div style="padding-left: 10px;">${findingsHtml}</div>
+            </div>
+            <div class="report-section">
+                <h4>5. Diagnóstico Final</h4>
+                <div style="padding-left: 10px; white-space: pre-wrap;">${document.getElementById('diag-final').value}</div>
+            </div>
+            <div class="report-section">
+                <h4>6. Indicadores de Calidad</h4>
                 <div class="report-row"><div class="report-label">Consentimiento:</div> <div>${state.quality.consentimiento}</div></div>
                 <div class="report-row"><div class="report-label">Duración Estudio:</div> <div>${state.quality.tiempo}</div></div>
                 <div class="report-row"><div class="report-label">Exploración:</div> <div>${state.quality.completa}</div></div>
                 <div class="report-row"><div class="report-label">Fotodocumentación:</div> <div>${state.quality.fotos}</div></div>
-            </div>
-            <div class="report-section">
-                <h4>5. Descripción Macroscópica</h4>
-                <div style="padding-left: 10px;">${findingsHtml}</div>
-            </div>
-            <div class="report-section">
-                <h4>6. Diagnóstico Final</h4>
-                <div style="padding-left: 10px; white-space: pre-wrap;">${document.getElementById('diag-final').value}</div>
             </div>
             <div class="report-section">
                 <h4>7. Plan y Recomendaciones</h4>

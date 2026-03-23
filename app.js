@@ -414,7 +414,7 @@ function updateAutoDiagnoses() {
     }
 }
 
-function generateReport() {
+function generateReport(skipSave = false) {
     updateAutoDiagnoses();
     const modal = document.getElementById('report-modal');
     const body = document.getElementById('report-preview-body');
@@ -513,8 +513,8 @@ function generateReport() {
     body.innerHTML = html;
     modal.classList.add('active');
 
-    // Automatically save to history when report is generated
-    saveToHistory();
+    // Automatically save to history when report is generated (only if new)
+    if(!skipSave) saveToHistory();
 }
 
 function closeReport() { document.getElementById('report-modal').classList.remove('active'); }
@@ -591,18 +591,105 @@ function renderHistory(filter = "") {
             <td style="padding: 12px; font-size: 0.85rem; color: var(--text-muted);">${r.patient.dni || '-'}</td>
             <td style="padding: 12px; font-size: 0.85rem;">${r.metadata.indicacion || '-'}</td>
             <td style="padding: 12px; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.diagnoses || '-'}</td>
-            <td style="padding: 12px; text-align: center;">
-                <button class="btn btn-icon" onclick="deleteFromHistory(${r.id})" style="color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
+            <td style="padding: 12px; text-align: center; white-space: nowrap;">
+                <button class="btn btn-icon" title="Ver Reporte" onclick="viewHistoryDetail('${r.id}')" style="color: var(--success); margin-right: 5px;"><i class="fa-solid fa-eye"></i></button>
+                <button class="btn btn-icon" title="Cargar para Editar" onclick="loadFromHistory('${r.id}')" style="color: var(--primary); margin-right: 5px;"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="btn btn-icon" title="Eliminar" onclick="deleteFromHistory('${r.id}')" style="color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
             </td>
         </tr>
     `).join('');
+}
+
+function viewHistoryDetail(id) {
+    try {
+        loadFromHistory(id, true); // Load silently (full sync)
+        setTimeout(() => {
+            generateReport(true); // Show report preview after a tiny delay
+        }, 50);
+    } catch(err) {
+        console.error("Error viewing detail:", err);
+    }
+}
+
+function loadFromHistory(id, silent = false) {
+    const record = state.history.find(r => String(r.id) === String(id));
+    if(!record) {
+        alert("No se encontró el registro seleccionado.");
+        return;
+    }
+
+    if(!silent) {
+        if(!confirm("¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
+    }
+
+    try {
+        // 1. Restore State (Object shallow copies)
+        state.patient = Object.assign({}, record.patient);
+        state.clinical = Object.assign({}, record.clinical);
+        state.metadata = Object.assign({}, record.metadata);
+        state.quality = Object.assign({}, record.quality);
+        state.findings = Array.from(record.findings || []);
+        state.images = Array.from(record.images || []);
+        state.plan = record.plan || '';
+
+        // 2. Sync DOM Elements
+        // Simple inputs
+        const fieldMap = {
+            'paciente-nombre': state.patient.nombre,
+            'paciente-dni': state.patient.dni,
+            'paciente-fnacimiento': state.patient.fnacimiento,
+            'paciente-sexo': state.patient.sexo,
+            'paciente-antecedentes': state.patient.antecedentes,
+            'paciente-departamento': state.patient.departamento,
+            'clinico-referente': state.clinical.referente,
+            'clinico-asa': state.clinical.asa,
+            'clinico-anticoagulante': state.clinical.anticoagulante,
+            'clinico-preparacion': state.clinical.preparacion,
+            'indicacion': state.metadata.indicacion,
+            'sedacion': state.metadata.sedacion,
+            'instrumento': state.metadata.instrumento,
+            'extension': state.metadata.extension,
+            'calidad-consentimiento': state.quality.consentimiento,
+            'calidad-fotos': state.quality.fotos,
+            'calidad-completa': state.quality.completa,
+            'calidad-tiempo': state.quality.tiempo,
+            'diag-final': record.diagnoses,
+            'plan': state.plan
+        };
+
+        Object.keys(fieldMap).forEach(key => {
+            const el = document.getElementById(key);
+            if(el) el.value = fieldMap[key] || '';
+        });
+
+        // Specific handling for municipios (trigger depto change first)
+        const deptoSelect = document.getElementById('paciente-departamento');
+        if(deptoSelect) {
+            deptoSelect.dispatchEvent(new Event('change'));
+            const muniSelect = document.getElementById('paciente-municipio');
+            if(muniSelect) muniSelect.value = state.patient.municipio || '';
+        }
+
+        // 3. Update Visual UI
+        updateTopbar();
+        updateFindingsList();
+        renderGallery();
+        
+        // 4. Important: Switch View
+        if(!silent) {
+            switchMainView('new');
+        }
+    } catch (e) {
+        console.error("Critical error loading history:", e);
+        if(!silent) alert("Hubo un error al cargar los datos. Por favor, intente de nuevo.");
+    }
 }
 
 function filterHistory(val) { renderHistory(val); }
 
 function deleteFromHistory(id) {
     if(confirm("¿Eliminar este registro?")) {
-        state.history = state.history.filter(r => r.id !== id);
+        state.history = state.history.filter(r => String(r.id) !== String(id));
         localStorage.setItem('endo_history', JSON.stringify(state.history));
         renderHistory();
     }

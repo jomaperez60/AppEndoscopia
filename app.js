@@ -15,6 +15,12 @@ const state = {
         anticoagulante: 'No',
         preparacion: 'Adecuado (Ayuno > 8h)'
     },
+    quality: {
+        consentimiento: 'Sí, obtenido y firmado',
+        fotos: 'Estándar (≥ 10 fotos)',
+        completa: 'Sí (incluye retrovisión)',
+        tiempo: '≥ 7 minutos'
+    },
     metadata: {
         indicacion: '',
         sedacion: 'Sedación Consciente',
@@ -70,6 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if(el) {
             el.addEventListener(id === 'referente' ? 'input' : 'change', (e) => state.clinical[id] = e.target.value);
         }
+    });
+
+    ['consentimiento', 'fotos', 'completa', 'tiempo'].forEach(id => {
+        const el = document.getElementById(`calidad-${id}`);
+        if(el) el.addEventListener('change', (e) => state.quality[id] = e.target.value);
     });
 
     ['nombre', 'dni', 'fnacimiento', 'sexo', 'antecedentes'].forEach(field => {
@@ -272,15 +283,22 @@ function generateReport() {
                 <div class="report-row"><div class="report-label">Extensión:</div> <div>Se intuba bajo visión directa hasta ${state.metadata.extension}</div></div>
             </div>
             <div class="report-section">
-                <h4>4. Descripción Macroscópica</h4>
+                <h4>4. Indicadores de Calidad</h4>
+                <div class="report-row"><div class="report-label">Consentimiento:</div> <div>${state.quality.consentimiento}</div></div>
+                <div class="report-row"><div class="report-label">Duración Estudio:</div> <div>${state.quality.tiempo}</div></div>
+                <div class="report-row"><div class="report-label">Exploración:</div> <div>${state.quality.completa}</div></div>
+                <div class="report-row"><div class="report-label">Fotodocumentación:</div> <div>${state.quality.fotos}</div></div>
+            </div>
+            <div class="report-section">
+                <h4>5. Descripción Macroscópica</h4>
                 <div style="padding-left: 10px;">${findingsHtml}</div>
             </div>
             <div class="report-section">
-                <h4>5. Diagnóstico Final</h4>
+                <h4>6. Diagnóstico Final</h4>
                 <div style="padding-left: 10px; white-space: pre-wrap;">${document.getElementById('diag-final').value}</div>
             </div>
             <div class="report-section">
-                <h4>6. Plan y Recomendaciones</h4>
+                <h4>7. Plan y Recomendaciones</h4>
                 <div style="padding-left: 10px; white-space: pre-wrap;">${state.plan || 'Sin recomendaciones adicionales.'}</div>
             </div>
         </div>`;

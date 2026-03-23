@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Endoscópico - MST 3.0</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-microscope"></i>
+                <span>EndoReport</span>
+            </div>
+            <nav>
+                <a href="#" class="nav-item active"><i class="fa-solid fa-file-medical"></i> <span>Nuevo Estudio</span></a>
+                <a href="#" class="nav-item"><i class="fa-solid fa-users"></i> <span>Pacientes</span></a>
+                <a href="#" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Estadísticas</span></a>
+                <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i> <span>Configuración</span></a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">Dr</div>
+                <div class="info">
+                    <span class="name">Dr. Médico</span>
+                    <span class="role">Gastroenterología</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="patient-banner">
+                    <div class="patient-info" id="topbar-patient-info">
+                        <h2 id="topbar-name">Nuevo Paciente</h2>
+                        <span class="tag" id="topbar-dni">DNI: -</span>
+                        <span class="tag" id="topbar-age">Edad: -</span>
+                        <span class="tag" id="topbar-sex">Sexo: -</span>
+                    </div>
+                    <div class="exam-info">
+                        <span class="badge info">Endoscopia Digestiva Alta (EGD)</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-secondary"><i class="fa-solid fa-save"></i> Guardar Borrador</button>
+                    <button class="btn btn-primary" onclick="generateReport()"><i class="fa-solid fa-file-pdf"></i> Generar Reporte</button>
+                </div>
+            </header>
+
+            <div class="content-body" id="dynamic-view">
+                <div class="work-area">
+                    <div class="tabs">
+                        <button class="tab active" data-target="metadata">1. Paciente y Procedimiento</button>
+                        <button class="tab" data-target="findings">2. Hallazgos Anatómicos</button>
+                        <button class="tab" data-target="diagnoses">3. Conclusión</button>
+                    </div>
+
+                    <div class="tab-content active" id="metadata">
+                        <div class="card">
+                            <h3><i class="fa-solid fa-user-injured"></i> Datos Generales del Paciente</h3>
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" id="paciente-nombre" placeholder="Nombre completo del paciente">
+                                </div>
+                                <div class="input-group">
+                                    <label>DNI / Identificación</label>
+                                    <input type="text" id="paciente-dni" placeholder="Número de documento">
+                                </div>
+                                <div class="input-group">
+                                    <label>Fecha de Nacimiento</label>
+                                    <input type="date" id="paciente-fnacimiento" onchange="calculateAge(this.value)">
+                                </div>
+                                <div class="input-group">
+                                    <label>Sexo</label>
+                                    <select id="paciente-sexo">
+                                        <option value="">Seleccione...</option>
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Femenino">Femenino</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Departamento de Honduras</label>
+                                    <select id="paciente-departamento">
+                                        <option value="">Seleccione Depto...</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Municipio</label>
+                                    <select id="paciente-municipio" disabled>
+                                        <option value="">Seleccione Municipio...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-grid full-width" style="margin-top: 16px;">
+                                <div class="input-group">
+                                    <label>Antecedentes y Alergias</label>
+                                    <textarea id="paciente-antecedentes" rows="2" placeholder="Describa alergias, cirugías previas o comorbilidades patológicas"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3><i class="fa-solid fa-clipboard-check"></i> Información del Procedimiento</h3>
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label>Indicación Principal</label>
+                                    <select id="indicacion">
+                                        <option value="">Seleccione indicación...</option>
+                                        <option value="HDA">Hemorragia Digestiva Alta</option>
+                                        <option value="Disfagia">Disfagia</option>
+                                        <option value="ERGE">Reflujo Gastroesofágico</option>
+                                        <option value="Screening">Cribado</option>
+                                        <option value="DolorAbdominal">Dolor Abdominal</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Sedación / Anestesia</label>
+                                    <select id="sedacion">
+                                        <option value="Tópica / Ninguna">Ninguna / Tópica</option>
+                                        <option value="Sedación Consciente" selected>Sedación Consciente</option>
+                                        <option value="Sedación Profunda">Sedación Profunda</option>
+                                        <option value="Anestesia General">Anestesia General</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Instrumento Utilizado</label>
+                                    <select id="instrumento">
+                                        <option value="Olympus">Olympus GIF-H190</option>
+                                        <option value="Pentax">Pentax EG29-i10</option>
+                                        <option value="Fuji">Fujifilm EG-760R</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Extensión del Examen</label>
+                                    <select id="extension">
+                                        <option value="Duodeno D2">Segunda porción duodenal</option>
+                                        <option value="Bulbo Duodenal">Bulbo duodenal</option>
+                                        <option value="Estómago">Estómago</option>
+                                        <option value="Esófago">Esófago</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="findings" style="display: none;">
+                        <div class="anatomy-selector">
+                            <div class="organ-btns">
+                                <button class="btn btn-outline" onclick="openFindings('Esófago')">Esófago</button>
+                                <button class="btn btn-outline" onclick="openFindings('Estómago')">Estómago</button>
+                                <button class="btn btn-outline" onclick="openFindings('Duodeno')">Duodeno</button>
+                            </div>
+                        </div>
+                        <div id="findings-container" class="findings-list">
+                            <p class="placeholder-text">Seleccione un órgano para registrar hallazgos estructurados</p>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="diagnoses" style="display: none;">
+                        <div class="card">
+                            <h3><i class="fa-solid fa-stethoscope"></i> Conclusión y Plan</h3>
+                            <div class="form-grid full-width">
+                                <div class="input-group">
+                                    <label>Diagnóstico (Generado automáticamente)</label>
+                                    <textarea id="diag-final" rows="4" readonly class="auto-filled">Examen normal hasta la porción evaluada.</textarea>
+                                </div>
+                                <div class="input-group">
+                                    <label>Plan de manejo / Recomendaciones</label>
+                                    <textarea id="plan" rows="3" placeholder="Ej. Biopsias tomadas, control en 1 año."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal MST -->
+            <div id="mst-modal" class="modal">
+                <div class="modal-content card">
+                    <div class="modal-header">
+                        <h3 id="mst-title">Registrar Hallazgo</h3>
+                        <button class="btn-close" onclick="closeMstModal()"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="modal-body" id="mst-body"></div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeMstModal()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="saveFinding()"><i class="fa-solid fa-check"></i> Añadir al Reporte</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal PDF Preview -->
+            <div id="report-modal" class="modal">
+                <div class="modal-content card report-modal-content">
+                    <div class="modal-header">
+                        <h3>Vista Previa del Reporte Médico</h3>
+                        <button class="btn-close" onclick="closeReport()"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="modal-body" id="report-preview-body"></div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="printReport()"><i class="fa-solid fa-print"></i> Imprimir o Guardar PDF</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+    <script src="mst_data.js"></script>
+    <script src="hn_data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

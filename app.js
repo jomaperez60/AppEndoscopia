@@ -9,6 +9,12 @@ const state = {
         antecedentes: '',
         edad: ''
     },
+    clinical: {
+        referente: '',
+        asa: 'ASA I (Normal, sano)',
+        anticoagulante: 'No',
+        preparacion: 'Adecuado (Ayuno > 8h)'
+    },
     metadata: {
         indicacion: '',
         sedacion: 'Sedación Consciente',
@@ -57,6 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
     ['indicacion', 'sedacion', 'instrumento', 'extension'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.addEventListener('change', (e) => state.metadata[id] = e.target.value);
+    });
+
+    ['referente', 'asa', 'anticoagulante', 'preparacion'].forEach(id => {
+        const el = document.getElementById(`clinico-${id}`);
+        if(el) {
+            el.addEventListener(id === 'referente' ? 'input' : 'change', (e) => state.clinical[id] = e.target.value);
+        }
     });
 
     ['nombre', 'dni', 'fnacimiento', 'sexo', 'antecedentes'].forEach(field => {
@@ -245,22 +258,29 @@ function generateReport() {
                 <div class="report-row"><div class="report-label">Fecha Examen:</div> <div>${new Date().toLocaleDateString('es-ES')}</div></div>
             </div>
             <div class="report-section">
-                <h4>2. Datos del Procedimiento</h4>
+                <h4>2. Datos Clínicos</h4>
+                <div class="report-row"><div class="report-label">Médico Referente:</div> <div>${state.clinical.referente || 'No especificado'}</div></div>
+                <div class="report-row"><div class="report-label">Riesgo ASA:</div> <div>${state.clinical.asa}</div></div>
+                <div class="report-row"><div class="report-label">Anticoag./Antiagreg.:</div> <div>${state.clinical.anticoagulante}</div></div>
+                <div class="report-row"><div class="report-label">Preparación:</div> <div>${state.clinical.preparacion}</div></div>
+            </div>
+            <div class="report-section">
+                <h4>3. Datos del Procedimiento</h4>
                 <div class="report-row"><div class="report-label">Indicación Médica:</div> <div>${state.metadata.indicacion || 'No especificada'}</div></div>
                 <div class="report-row"><div class="report-label">Sedación:</div> <div>${state.metadata.sedacion}</div></div>
                 <div class="report-row"><div class="report-label">Instrumento:</div> <div>${state.metadata.instrumento}</div></div>
                 <div class="report-row"><div class="report-label">Extensión:</div> <div>Se intuba bajo visión directa hasta ${state.metadata.extension}</div></div>
             </div>
             <div class="report-section">
-                <h4>3. Descripción Macroscópica</h4>
+                <h4>4. Descripción Macroscópica</h4>
                 <div style="padding-left: 10px;">${findingsHtml}</div>
             </div>
             <div class="report-section">
-                <h4>4. Diagnóstico Final</h4>
+                <h4>5. Diagnóstico Final</h4>
                 <div style="padding-left: 10px; white-space: pre-wrap;">${document.getElementById('diag-final').value}</div>
             </div>
             <div class="report-section">
-                <h4>5. Plan y Recomendaciones</h4>
+                <h4>6. Plan y Recomendaciones</h4>
                 <div style="padding-left: 10px; white-space: pre-wrap;">${state.plan || 'Sin recomendaciones adicionales.'}</div>
             </div>
         </div>`;

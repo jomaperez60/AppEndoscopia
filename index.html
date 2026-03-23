@@ -106,6 +106,40 @@
                         </div>
 
                         <div class="card">
+                            <h3><i class="fa-solid fa-notes-medical"></i> Datos Clínicos</h3>
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label>Médico Referente</label>
+                                    <input type="text" id="clinico-referente" placeholder="Dr. / Dra.">
+                                </div>
+                                <div class="input-group">
+                                    <label>Clasificación ASA</label>
+                                    <select id="clinico-asa">
+                                        <option value="ASA I (Normal, sano)" selected>ASA I (Normal, sano)</option>
+                                        <option value="ASA II (Enf. sistémica leve)">ASA II (Enf. sistémica leve)</option>
+                                        <option value="ASA III (Enf. sistémica grave)">ASA III (Enf. sistémica grave)</option>
+                                        <option value="ASA IV (Riesgo severo)">ASA IV (Riesgo severo)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Terapia Anticoagulante/Antiagregante</label>
+                                    <select id="clinico-anticoagulante">
+                                        <option value="No" selected>No</option>
+                                        <option value="Sí, suspendida">Sí, suspendida</option>
+                                        <option value="Sí, activa">Sí, activa</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Preparación / Ayuno</label>
+                                    <select id="clinico-preparacion">
+                                        <option value="Adecuado (Ayuno > 8h)" selected>Adecuado (Ayuno > 8h)</option>
+                                        <option value="Inadecuado">Inadecuado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
                             <h3><i class="fa-solid fa-clipboard-check"></i> Información del Procedimiento</h3>
                             <div class="form-grid">
                                 <div class="input-group">

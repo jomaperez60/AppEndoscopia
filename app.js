@@ -101,6 +101,7 @@ function updateTopbar() {
 let currentOrgan = '';
 let currentMstSelection = [];
 var currentIndicationsSelection = [];
+let currentDiagnosesSelection = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize Flatpickr for Birth Date
@@ -123,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tabContents.forEach(c => c.style.display = 'none');
             tab.classList.add('active');
             document.getElementById(tab.dataset.target).style.display = 'block';
-            if (tab.dataset.target === 'diagnoses') updateAutoDiagnoses();
+            // Removed auto-diagnoses to prevent overwriting standardized selections
         });
     });
 
@@ -690,6 +691,95 @@ function updateIndicationSpec(level, baseItem, value) {
 
 function closeIndications() { document.getElementById('indications-modal').classList.remove('active'); }
 
+// --- Standardized Diagnoses Logic ---
+
+function openDiagnosesModal() {
+    currentDiagnosesSelection = [];
+    document.getElementById('diagnoses-modal').classList.add('active');
+    document.getElementById('current-diag-preview').innerText = '';
+    const body = document.getElementById('diagnoses-body');
+    body.innerHTML = '';
+    renderDiagnosesLevel(diagnosesTree, body, 0);
+}
+
+function renderDiagnosesLevel(dataObj, container, level) {
+    if (!dataObj) return;
+
+    const existingLevels = Array.from(container.children);
+    existingLevels.forEach((el, idx) => { if (idx >= level) el.remove(); });
+
+    const div = document.createElement('div');
+    div.className = 'mst-level';
+    const titles = ['Órgano:', 'Categoría:', 'Diagnóstico:', 'Atributo:', 'Específico:'];
+    div.innerHTML = `<h4>${titles[level] || 'Especificación:'}</h4><div class="mst-grid"></div>`;
+    const grid = div.querySelector('.mst-grid');
+
+    const handleSelection = (item) => {
+        currentDiagnosesSelection[level] = item;
+        currentDiagnosesSelection.splice(level + 1);
+        updateDiagnosesPreview();
+    };
+
+    if (Array.isArray(dataObj)) {
+        dataObj.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'mst-btn';
+            btn.innerText = item;
+            btn.onclick = () => {
+                Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                btn.classList.add('selected');
+                handleSelection(item);
+            };
+            grid.appendChild(btn);
+        });
+    } else {
+        Object.keys(dataObj).forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'mst-btn';
+            btn.innerText = key;
+            btn.onclick = () => {
+                Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                btn.classList.add('selected');
+                handleSelection(key);
+                renderDiagnosesLevel(dataObj[key], container, level + 1);
+            };
+            grid.appendChild(btn);
+        });
+    }
+    container.appendChild(div);
+}
+
+function updateDiagnosesPreview() {
+    const preview = document.getElementById('current-diag-preview');
+    preview.innerText = currentDiagnosesSelection.join(' > ');
+}
+
+function saveDiagnoses() {
+    if (currentDiagnosesSelection.length === 0) return;
+    
+    // Format the selection (e.g., Stomach: Ulcer - Established)
+    const organ = currentDiagnosesSelection[0];
+    const category = currentDiagnosesSelection[1];
+    const diag = currentDiagnosesSelection[2];
+    const details = currentDiagnosesSelection.slice(3).join(' - ');
+    
+    let text = `${organ}: ${diag}`;
+    if (details) text += ` (${details})`;
+
+    const diagArea = document.getElementById('diag-final');
+    if (diagArea.value.includes('normal')) diagArea.value = '';
+    
+    const lines = diagArea.value ? diagArea.value.split('\n') : [];
+    if (!lines.includes(text)) {
+        diagArea.value = (diagArea.value ? diagArea.value + '\n' : '') + text;
+    }
+    
+    state.metadata.diagFinal = diagArea.value;
+    closeDiagnoses();
+}
+
+function closeDiagnoses() { document.getElementById('diagnoses-modal').classList.remove('active'); }
+
 // --- Image Tagging Logic ---
 
 function handleImageUpload(e) {
@@ -928,7 +1018,11 @@ function updateAutoDiagnoses() {
 }
 
 function generateReport(skipSave = false) {
-    updateAutoDiagnoses();
+    // Only auto-suggest if the field is empty
+    const diagArea = document.getElementById('diag-final');
+    if (!diagArea.value || diagArea.value.trim() === "" || diagArea.value.includes('normal')) {
+        updateAutoDiagnoses();
+    }
     const modal = document.getElementById('report-modal');
     const body = document.getElementById('report-preview-body');
 

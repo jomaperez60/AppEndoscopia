@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 </head>
-</head>
 <body class="login-active">
     <!-- Login Screen Overlay -->
     <div id="login-overlay" class="login-overlay">
@@ -323,10 +322,15 @@
                         <div class="card">
                             <h3><i class="fa-solid fa-stethoscope"></i> Conclusión y Plan</h3>
                             <div class="form-grid full-width">
-                                <div class="input-group">
-                                    <label>Diagnóstico (Generado automáticamente)</label>
-                                    <textarea id="diag-final" rows="4" readonly class="auto-filled">Examen normal hasta la porción evaluada.</textarea>
-                                </div>
+                                <div class="findings-section">
+                        <div class="section-header">
+                            <h3><i class="fa-solid fa-clipboard-check"></i> Conclusiones y Diagnóstico</h3>
+                            <button class="btn btn-outline btn-sm" onclick="openDiagnosesModal()">
+                                <i class="fa-solid fa-list-check"></i> Seleccionar Diagnóstico
+                            </button>
+                        </div>
+                        <textarea id="diag-final" rows="6" placeholder="Resumen de hallazgos y diagnóstico final estructurado..."></textarea>
+                    </div>
                                 <div class="input-group">
                                     <label>Plan de manejo / Recomendaciones</label>
                                     <textarea id="plan" rows="3" placeholder="Ej. Biopsias tomadas, control en 1 año."></textarea>
@@ -597,7 +601,35 @@
                         <!-- Se llenará dinámicamente -->
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="closeIndications()">Cancelar</button>
+                        <button class="btn btn-outline" onclick="closeIndications()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="saveIndication()">Aceptar Selección</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Diagnósticos Estructurados -->
+            <div id="diagnoses-modal" class="modal">
+                <div class="modal-content card" style="width: 800px; max-height: 90vh;">
+                    <div class="modal-header">
+                        <h3><i class="fa-solid fa-stethoscope"></i> Selector de Diagnóstico Estándar</h3>
+                        <button class="btn-close" onclick="closeDiagnoses()"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="modal-body" id="diagnoses-body" style="overflow-y: auto;">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <div class="modal-footer">
+                        <div style="display:flex; gap:10px; width:100%; justify-content: space-between; align-items:center;">
+                            <span id="current-diag-preview" style="font-size: 0.85rem; color: var(--primary); font-weight: 600;"></span>
+                            <div>
+                                <button class="btn btn-outline" onclick="closeDiagnoses()">Cancelar</button>
+                                <button class="btn btn-primary" onclick="saveDiagnoses()">Aceptar Selección</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="closeIndications()">Cancelar</button>
                         <button class="btn btn-primary" onclick="saveIndication()">Aceptar Selección</button>
                     </div>
                 </div>

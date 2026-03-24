@@ -109,3 +109,79 @@ const indicationsTree = {
     ]
 };
 
+const diagAttrs = ['Sospecha de', 'Establecido', 'Exclusión de', 'Seguimiento de', 'Tratamiento de'];
+const forrestAttrs = [
+    'Tipo I A: activa pulsátil', 'Tipo I B: activa rezumado', 
+    'Tipo II A: Vaso visible', 'Tipo II B: material oscuro/coágulo', 
+    'Tipo III: sin estigmas de sangrado'
+];
+
+const diagnosesTree = {
+    'Esófago': {
+        'Diagnóstico principal': {
+            'Normal': [],
+            'Esofagitis por reflujo': diagAttrs,
+            'Varices': diagAttrs,
+            'Estenosis benigna': diagAttrs,
+            'Tumor maligno': diagAttrs,
+            'Esófago de Barrett': diagAttrs,
+            'Ulcera': diagAttrs
+        },
+        'Otros diagnósticos': [
+            'Acalasia', 'Tumor benigno', 'Divertículo', 'Fístula', 'Cuerpo Extraño', 
+            'Hernia de hiato', 'Síndrome de Mallory-Weiss', 'Esofagitis por cándidas', 
+            'Esofagitis sin reflujo', 'Pólipo', 'Aspecto Post-quirúrgico', 
+            'Aspecto post-escleroterapia', 'Cicatriz', 'Anillo de Schatzki', 'Tumor submucoso'
+        ]
+    },
+    'Estómago': {
+        'Diagnóstico principal': {
+            'Normal': [],
+            'Gastropatías Erosiva': diagAttrs,
+            'Gastropatía Eritematosa (hiperémica)': diagAttrs,
+            'Gastropatía Hipertrófica': diagAttrs,
+            'Gastropatía Hemorrágica': diagAttrs,
+            'Mucosa gástrica atrófica': diagAttrs,
+            'Sospecha de gastritis': diagAttrs,
+            'Gastropatía de la hipertensión portal': diagAttrs,
+            'Ulcera gástrica': diagAttrs,
+            'Ulcera gástrica sangrante': {
+                'Atributos Generales': diagAttrs,
+                'Clasificación de Forrest': forrestAttrs
+            },
+            'Ulcera anastomótica': diagAttrs,
+            'Tumor maligno (especificar)': diagAttrs,
+            'Pólipos': diagAttrs
+        },
+        'Otros diagnósticos': [
+            'Angiectasia', 'Tumor benigno', 'Sangrado de origen desconocido', 
+            'Anomalía vascular de Dieulafoy', 'Divertículo', 'Cáncer gástrico precoz', 
+            'Compresión extrínseca', 'Fístula', 'Cuerpo Extraño', 'Retención gástrica', 
+            'Helicobacter pylori', 'Gastropatía papulosa', 'Parásitos', 
+            'Cambios Post-quirúrgicos', 'Cicatriz', 'Tumor submucoso', 'Varices'
+        ]
+    },
+    'Duodeno': {
+        'Diagnóstico principal': {
+            'Normal': [],
+            'Duodenopatía Erosiva': diagAttrs,
+            'Duodenopatía Eritematosa (Hiperémica)': diagAttrs,
+            'Duodenopatía Congestiva': diagAttrs,
+            'Duodenopatía Hemorrágica': diagAttrs,
+            'Ulcera duodenal': diagAttrs,
+            'Ulcera duodenal sangrante': {
+                'Atributos Generales': diagAttrs,
+                'Clasificación de Forrest': forrestAttrs
+            },
+            'Deformidad ulcerogénica del duodeno': diagAttrs
+        },
+        'Otros diagnósticos': [
+            'Angiectasia', 'Tumor benigno de origen desconocido', 
+            'Hiperplasia de glándulas de Brunner', 'Enfermedad celíaca', 
+            'Enfermedad de Crohn', 'Divertículo', 'Fístula', 'Tumor maligno', 
+            'Parásitos', 'Pólipo(s)', 'Cambios Post-quirúrgicos', 'Cicatriz', 
+            'Tumor submucoso', 'Otro (Especificar)'
+        ]
+    }
+};
+

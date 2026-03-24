@@ -34,8 +34,12 @@ const state = {
     plan: '',
     users: JSON.parse(localStorage.getItem('endo_users') || '[{"username":"admin","password":"admin","role":"admin","avatar":"Dr"}]'),
     currentUser: JSON.parse(sessionStorage.getItem('endo_current_user') || 'null'),
-    settings: JSON.parse(localStorage.getItem('endo_settings') || '{"hospital":"Hospital Local","physician":"Dr. Clínico","location":"","specialty":"","language":"es","units":"cm","logo":null}')
+    settings: JSON.parse(localStorage.getItem('endo_settings') || '{"hospital":"Hospital Local","physician":"Dr. Clínico","location":"","specialty":"","language":"es","units":"cm","logo":null}'),
+    tagColors: ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#a855f7', '#06b6d4', '#f97316', '#ec4899'],
+    currentStudyId: null
 };
+
+let isDraggingTag = false;
 
 function calculateAge(dateString) {
     if (!dateString) { state.patient.edad = ''; updateTopbar(); return; }
@@ -450,6 +454,11 @@ function switchMainView(view) {
         navSettings.classList.add('active');
         document.getElementById('topbar-name').textContent = "Configuración del Sistema";
         renderSettings();
+    } else if (view === 'users') {
+        if(usersView) usersView.style.display = 'block';
+        navUsers.classList.add('active');
+        document.getElementById('topbar-name').textContent = "Gestión de Usuarios";
+        renderUsers();
     }
 }
 
@@ -534,8 +543,8 @@ function handleImageUpload(e) {
         reader.onload = (event) => {
             state.images.push({
                 data: event.target.result,
-                x: null,
-                y: null,
+                x1: null, y1: null, // Label position
+                x2: null, y2: null, // Target position
                 label: 'Sin etiqueta',
                 id: Date.now() + Math.random()
             });
@@ -559,9 +568,12 @@ function renderGallery() {
     state.images.forEach((img, index) => {
         const div = document.createElement('div');
         div.className = `img-tile ${state.selectedImageIndex === index ? 'selected' : ''}`;
+        if (state.selectedImageIndex === index) {
+            div.style.boxShadow = `0 0 0 2px ${state.tagColors[index % state.tagColors.length]}`;
+        }
         
         div.innerHTML = `
-            <div class="tile-number">${index + 1}</div>
+            <div class="tile-number" style="background-color: ${state.tagColors[index % state.tagColors.length]}">${index + 1}</div>
             <img src="${img.data}">
             <div class="tile-label">${img.label}</div>
             <button class="remove-img" onclick="removeImage(event, ${index})">&times;</button>
@@ -604,7 +616,7 @@ function removeImage(e, index) {
     renderGallery();
 }
 
-function handleDiagramClick(e) {
+function handleTagMouseDown(e) {
     if (state.selectedImageIndex === null) {
         alert("Por favor, seleccione primero una imagen de la galería de la izquierda.");
         return;
@@ -615,11 +627,38 @@ function handleDiagramClick(e) {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    state.images[state.selectedImageIndex].x = x;
-    state.images[state.selectedImageIndex].y = y;
+    // First click sets the label position
+    const img = state.images[state.selectedImageIndex];
+    img.x1 = x;
+    img.y1 = y;
+    img.x2 = x; // Initially same
+    img.y2 = y;
     
+    isDraggingTag = true;
+    renderTags();
+}
+
+function handleTagMouseMove(e) {
+    if (!isDraggingTag || state.selectedImageIndex === null) return;
+
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    const img = state.images[state.selectedImageIndex];
+    img.x2 = x;
+    img.y2 = y;
+    
+    renderTags();
+}
+
+function handleTagMouseUp() {
+    if (!isDraggingTag) return;
+    isDraggingTag = false;
+
     // Auto select next untagged image
-    const nextUntagged = state.images.findIndex((img, idx) => img.x === null && idx !== state.selectedImageIndex);
+    const nextUntagged = state.images.findIndex((img, idx) => img.x1 === null && idx !== state.selectedImageIndex);
     if(nextUntagged !== -1) {
         state.selectedImageIndex = nextUntagged;
     }
@@ -632,25 +671,62 @@ function renderTags() {
     if(!svg) return;
     
     svg.innerHTML = '';
-    state.images.forEach((img, index) => {
-        if (img.x === null) return;
+    
+    // Define marker for arrowheads
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    state.tagColors.forEach((color, i) => {
+        const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+        marker.setAttribute("id", `arrowhead-${i}`);
+        marker.setAttribute("markerWidth", "10");
+        marker.setAttribute("markerHeight", "7");
+        marker.setAttribute("refX", "9");
+        marker.setAttribute("refY", "3.5");
+        marker.setAttribute("orient", "auto");
+        const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+        polygon.setAttribute("fill", color);
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+    });
+    svg.appendChild(defs);
 
-        // Draw Square
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", `${img.x - 2.5}%`);
-        rect.setAttribute("y", `${img.y - 2.5}%`);
-        rect.setAttribute("width", "5%");
-        rect.setAttribute("height", "5%");
-        rect.setAttribute("class", "tag-box");
-        if(state.selectedImageIndex === index) rect.setAttribute("stroke", "white");
-        svg.appendChild(rect);
+    state.images.forEach((img, index) => {
+        if (img.x1 === null) return;
+
+        const color = state.tagColors[index % state.tagColors.length];
+        const isSelected = state.selectedImageIndex === index;
+
+        // Draw Line (Leader)
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", `${img.x1}%`);
+        line.setAttribute("y1", `${img.y1}%`);
+        line.setAttribute("x2", `${img.x2}%`);
+        line.setAttribute("y2", `${img.y2}%`);
+        line.setAttribute("stroke", color);
+        line.setAttribute("stroke-width", isSelected ? "1.5" : "1");
+        line.setAttribute("marker-end", `url(#arrowhead-${index % state.tagColors.length})`);
+        if (isSelected) line.setAttribute("stroke-dasharray", "2,1");
+        svg.appendChild(line);
+
+        // Draw Circle for Label
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", `${img.x1}%`);
+        circle.setAttribute("cy", `${img.y1}%`);
+        circle.setAttribute("r", "2.5%");
+        circle.setAttribute("fill", color);
+        circle.setAttribute("stroke", isSelected ? "white" : "none");
+        circle.setAttribute("stroke-width", "0.5");
+        svg.appendChild(circle);
 
         // Draw number
         const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute("x", `${img.x}%`);
-        text.setAttribute("y", `${img.y + 1.5}%`);
+        text.setAttribute("x", `${img.x1}%`);
+        text.setAttribute("y", `${img.y1 + 0.8}%`);
         text.setAttribute("class", "tag-text");
         text.setAttribute("text-anchor", "middle");
+        text.setAttribute("font-size", "10px");
+        text.setAttribute("fill", "white");
+        text.setAttribute("font-weight", "bold");
         text.textContent = index + 1;
         svg.appendChild(text);
     });
@@ -658,8 +734,8 @@ function renderTags() {
 
 function clearAllTags() {
     state.images.forEach(img => {
-        img.x = null;
-        img.y = null;
+        img.x1 = null; img.y1 = null;
+        img.x2 = null; img.y2 = null;
     });
     renderGallery();
 }
@@ -766,12 +842,50 @@ function generateReport(skipSave = false) {
             <!-- Photos Section -->
             ${state.images.length > 0 ? `
             <div style="margin-bottom: 40px; page-break-before: auto;">
-                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">DOCUMENTACIÓN FOTOGRÁFICA</div>
+                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">DOCUMENTACIÓN FOTOGRÁFICA Y MAPEEO</div>
+                
+                <!-- Central Diagram Mapping -->
+                <div style="display: flex; gap: 30px; align-items: flex-start; margin-bottom: 30px; background: #fcfcfc; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                    <div style="position: relative; width: 300px; background: white; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <img src="gi_diagram.png" style="width: 100%; display: block;">
+                        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                            <defs>
+                                ${state.tagColors.map((color, i) => `
+                                    <marker id="pdf-arrow-${i}" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                        <polygon points="0 0, 10 3.5, 0 7" fill="${color}" />
+                                    </marker>
+                                `).join('')}
+                            </defs>
+                            ${state.images.map((img, i) => img.x1 !== null ? `
+                                <line x1="${img.x1}%" y1="${img.y1}%" x2="${img.x2}%" y2="${img.y2}%" stroke="${state.tagColors[i % state.tagColors.length]}" stroke-width="1" marker-end="url(#pdf-arrow-${i % state.tagColors.length})" />
+                                <circle cx="${img.x1}%" cy="${img.y1}%" r="3%" fill="${state.tagColors[i % state.tagColors.length]}" />
+                                <text x="${img.x1}%" y="${img.y1 + 1}%" font-size="8" text-anchor="middle" font-weight="bold" fill="white">${i + 1}</text>
+                            ` : '').join('')}
+                        </svg>
+                        <div style="text-align: center; font-size: 0.7rem; color: #888; margin-top: 5px;">Esquema de Localización de Hallazgos</div>
+                    </div>
+                    
+                    <div style="flex: 1; font-size: 0.85rem;">
+                        <p style="margin-top: 0; font-weight: bold; color: #333;">Leyenda de Mapeo:</p>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                            ${state.images.filter(img => img.x1 !== null).map((img, i) => `
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="background: ${state.tagColors[i % state.tagColors.length]}; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">${i + 1}</span>
+                                    <span style="color: #555;">${img.label}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                     ${state.images.map((img, i) => `
-                        <div style="text-align: center;">
-                            <img src="${img.data}" style="width: 100%; height: 140px; object-fit: cover; border: 1px solid #eee; border-radius: 4px;">
-                            <div style="font-size: 0.8rem; margin-top: 5px;"><strong>Fig ${i + 1}:</strong> ${img.label}</div>
+                        <div style="text-align: center; position: relative;">
+                            <img src="${img.data}" style="width: 100%; height: 130px; object-fit: cover; border: 1px solid #eee; border-radius: 4px;">
+                            <div style="font-size: 0.8rem; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                <span style="background: ${state.tagColors[i % state.tagColors.length]}; color: white; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold;">${i + 1}</span>
+                                <span style="color: #333;"><strong>Fig ${i + 1}:</strong> ${img.label}</span>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
@@ -834,7 +948,7 @@ function saveToHistory() {
     }
 
     const record = {
-        id: Date.now(),
+        id: state.currentStudyId || Date.now(),
         date: new Date().toLocaleDateString('es-ES'),
         dateTime: new Date().toLocaleString('es-ES'),
         patient: { ...state.patient },
@@ -843,12 +957,21 @@ function saveToHistory() {
         quality: { ...state.quality },
         diagnoses: document.getElementById('diag-final').value,
         plan: state.plan,
-        findings: [ ...state.findings ]
+        findings: [ ...state.findings ],
+        images: [ ...state.images ] // Persist images too!
     };
 
-    state.history.unshift(record);
+    const existingIdx = state.history.findIndex(r => r.id === record.id);
+    if (existingIdx !== -1) {
+        state.history[existingIdx] = record;
+        console.log("Estudio actualizado en el historial.");
+    } else {
+        state.history.unshift(record);
+        state.currentStudyId = record.id;
+        console.log("Nuevo estudio guardado en el historial.");
+    }
+
     localStorage.setItem('endo_history', JSON.stringify(state.history));
-    alert("Estudio guardado exitosamente en el historial.");
     renderHistory();
 }
 
@@ -891,8 +1014,8 @@ function viewHistoryDetail(id) {
         setTimeout(() => {
             generateReport(true); // Show report preview after a tiny delay
         }, 50);
-    } catch(err) {
-        console.error("Error viewing detail:", err);
+    } catch (e) {
+        console.error("Error loading history:", e);
     }
 }
 
@@ -929,7 +1052,6 @@ function loadFromHistory(id, silent = false) {
             'paciente-fnacimiento': state.patient.fnacimiento,
             'paciente-sexo': state.patient.sexo,
             'paciente-antecedentes': state.patient.antecedentes,
-            'paciente-departamento': state.patient.departamento,
             'clinico-referente': state.clinical.referente,
             'clinico-asa': state.clinical.asa,
             'clinico-anticoagulante': state.clinical.anticoagulante,
@@ -942,7 +1064,85 @@ function loadFromHistory(id, silent = false) {
             'calidad-fotos': state.quality.fotos,
             'calidad-completa': state.quality.completa,
             'calidad-tiempo': state.quality.tiempo,
-            'diag-final': record.diagnoses,
+            'diag-final': record.diagnoses || ''
+        };
+
+        Object.keys(fieldMap).forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.value = fieldMap[id] || '';
+        });
+
+        // 3. Special handling for address (if it exists)
+        if (state.patient.departamento) {
+            const deptoEl = document.getElementById('paciente-departamento');
+            if (deptoEl) {
+                deptoEl.value = state.patient.departamento;
+                deptoEl.dispatchEvent(new Event('change')); // Trigger municipio filter
+                setTimeout(() => {
+                    const muniEl = document.getElementById('paciente-municipio');
+                    if (muniEl) muniEl.value = state.patient.municipio;
+                }, 50);
+            }
+        }
+
+        // 4. Render dependent UI
+        renderGallery();
+        updateFindingsList();
+        updateTopbar();
+
+        if(!silent) switchMainView('new');
+
+    } catch (e) {
+        console.error("Error syncing UI from record:", e);
+    }
+}
+
+function loadFromHistory(id, silent = false) {
+    const record = state.history.find(r => String(r.id) === String(id));
+    if(!record) {
+        alert("No se encontró el registro seleccionado.");
+        return;
+    }
+
+    if(!silent) {
+        if(state.currentUser.role !== 'admin') {
+            alert("Solo los administradores pueden editar estudios guardados.");
+            return;
+        }
+        if(!confirm("¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
+    }
+
+    try {
+        // 1. Restore State
+        state.currentStudyId = record.id;
+        state.patient = JSON.parse(JSON.stringify(record.patient));
+        state.clinical = JSON.parse(JSON.stringify(record.clinical));
+        state.metadata = JSON.parse(JSON.stringify(record.metadata));
+        state.quality = JSON.parse(JSON.stringify(record.quality));
+        state.findings = JSON.parse(JSON.stringify(record.findings || []));
+        state.images = JSON.parse(JSON.stringify(record.images || []));
+        state.plan = record.plan || '';
+
+        // 2. Sync UI Elements
+        const fieldMap = {
+            'paciente-nombre': state.patient.nombre,
+            'paciente-dni': state.patient.dni,
+            'paciente-fnacimiento': state.patient.fnacimiento,
+            'paciente-sexo': state.patient.sexo,
+            'paciente-antecedentes': state.patient.antecedentes,
+            'clinico-referente': state.clinical.referente,
+            'clinico-asa': state.clinical.asa,
+            'clinico-anticoagulante': state.clinical.anticoagulante,
+            'clinico-preparacion': state.clinical.preparacion,
+            'indicacion': state.metadata.indicacion,
+            'sedacion': state.metadata.sedacion,
+            'instrumento': state.metadata.instrumento,
+            'extension': state.metadata.extension,
+            'calidad-consentimiento': state.quality.consentimiento,
+            'calidad-fotos': state.quality.fotos,
+            'calidad-completa': state.quality.completa,
+            'calidad-tiempo': state.quality.tiempo,
+            'diag-final': record.diagnoses || '',
             'plan': state.plan
         };
 
@@ -951,27 +1151,63 @@ function loadFromHistory(id, silent = false) {
             if(el) el.value = fieldMap[key] || '';
         });
 
-        // Specific handling for municipios (trigger depto change first)
+        // Special handling for geography
         const deptoSelect = document.getElementById('paciente-departamento');
-        if(deptoSelect) {
+        if(deptoSelect && state.patient.departamento) {
+            deptoSelect.value = state.patient.departamento;
             deptoSelect.dispatchEvent(new Event('change'));
-            const muniSelect = document.getElementById('paciente-municipio');
-            if(muniSelect) muniSelect.value = state.patient.municipio || '';
+            setTimeout(() => {
+                const muniSelect = document.getElementById('paciente-municipio');
+                if(muniSelect) muniSelect.value = state.patient.municipio || '';
+            }, 50);
         }
 
-        // 3. Update Visual UI
+        // 3. Update Visuals
         updateTopbar();
         updateFindingsList();
         renderGallery();
         
-        // 4. Important: Switch View
-        if(!silent) {
-            switchMainView('new');
-        }
+        if(!silent) switchMainView('new');
+
     } catch (e) {
         console.error("Critical error loading history:", e);
-        if(!silent) alert("Hubo un error al cargar los datos. Por favor, intente de nuevo.");
+        if(!silent) alert("Hubo un error al sincronizar los datos. Algunos campos podrían no haberse cargado correctamente.");
     }
+}
+
+function resetForm() {
+    if(!confirm("¿Desea limpiar el formulario para un nuevo estudio? Se perderán los datos no guardados.")) return;
+    
+    state.currentStudyId = null;
+    state.patient = { nombre:'', dni:'', fnacimiento:'', sexo:'', departamento:'', municipio:'', antecedentes:'', edad:'' };
+    state.clinical = { referente: '', asa: 'ASA I (Normal, sano)', anticoagulante: 'No', preparacion: 'Adecuado (Ayuno > 8h)' };
+    state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', instrumento: 'Olympus', extension: 'Duodeno D2' };
+    state.quality = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos' };
+    state.findings = [];
+    state.images = [];
+    state.plan = '';
+    state.selectedImageIndex = null;
+
+    // Reset UI
+    document.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(el => {
+        if(!el.id.startsWith('login-')) el.value = (el.tagName === 'SELECT') ? el.options[0]?.value || '' : '';
+    });
+    
+    // Re-set defaults for selects
+    ['asa', 'anticoagulante', 'preparacion'].forEach(id => {
+        const el = document.getElementById(`clinico-${id}`);
+        if(el) el.value = state.clinical[id];
+    });
+    const qualityDefaults = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos' };
+    Object.keys(qualityDefaults).forEach(id => {
+        const el = document.getElementById(`calidad-${id}`);
+        if(el) el.value = qualityDefaults[id];
+    });
+
+    updateTopbar();
+    updateFindingsList();
+    renderGallery();
+    switchMainView('new');
 }
 
 function filterHistory(val) { renderHistory(val); }
@@ -981,7 +1217,7 @@ function deleteFromHistory(id) {
         alert("Solo los administradores pueden eliminar estudios.");
         return;
     }
-    if(confirm("¿Eliminar este registro?")) {
+    if(confirm("¿Eliminar este registro de forma permanente?")) {
         state.history = state.history.filter(r => String(r.id) !== String(id));
         localStorage.setItem('endo_history', JSON.stringify(state.history));
         renderHistory();
@@ -989,40 +1225,34 @@ function deleteFromHistory(id) {
 }
 
 function clearHistory() {
-    if(confirm("¿Borrar todo el historial?")) {
+    if(state.currentUser.role !== 'admin') return;
+    if(confirm("¿BORRAR TODO EL HISTORIAL? Esta acción no se puede deshacer.")) {
         state.history = [];
         localStorage.setItem('endo_history', JSON.stringify(state.history));
         renderHistory();
     }
 }
 
-function resetForm() {
-    if(confirm("¿Desea limpiar el formulario para un nuevo estudio?")) {
-        // Reset state
-        state.patient = { nombre:'', dni:'', fnacimiento:'', sexo:'', departamento:'', municipio:'', antecedentes:'', edad:'' };
-        state.findings = [];
-        state.images = [];
-        state.plan = '';
-        state.selectedImageIndex = null;
-        
-        // UI Clean up
-        document.querySelectorAll('input, select, textarea').forEach(el => el.value = '');
-        updateTopbar();
-        updateFindingsList();
-        renderGallery();
-        switchMainView('new');
-    }
-}
-
 function exportToCSV() {
-    if(state.history.length === 0) { alert("No hay datos."); return; }
-    const headers = ["ID", "Fecha", "Nombre", "DNI", "Edad", "Sexo", "ASA", "Indicación", "Diagnóstico"];
-    const rows = state.history.map(r => [r.id, r.date, r.patient.nombre, r.patient.dni, r.patient.edad, r.patient.sexo, r.clinical.asa, r.metadata.indicacion, (r.diagnoses || "").replace(/\n/g, " ")]);
+    if(state.history.length === 0) { alert("No hay datos para exportar."); return; }
+    const headers = ["ID", "Fecha", "Nombre", "DNI", "Edad", "Sexo", "Procedencia", "ASA", "Indicación", "Conclusión"];
+    const rows = state.history.map(r => [
+        r.id, 
+        r.date, 
+        r.patient.nombre, 
+        r.patient.dni, 
+        r.patient.edad, 
+        r.patient.sexo, 
+        `${r.patient.municipio || ''}, ${r.patient.departamento || ''}`,
+        r.clinical.asa, 
+        r.metadata.indicacion, 
+        (r.diagnoses || "").replace(/\n/g, " ")
+    ]);
     let csv = "\uFEFF" + headers.join(";") + "\n";
     rows.forEach(row => csv += row.map(cell => `"${cell || ''}"`).join(";") + "\n");
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Endoscopia_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Endoscopia_Export_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 }

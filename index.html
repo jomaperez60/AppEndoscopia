@@ -290,7 +290,13 @@
                             <div class="diagram-panel" id="diagram-workspace" style="width: 400px; background: white; border-radius: var(--radius-md); position: relative; border: 2px solid var(--border); overflow: hidden;">
                                 <div id="gi-diagram-container" style="position: relative; width: 100%; height: 100%; padding: 10px; display: flex; align-items: center; justify-content: center;">
                                     <img src="gi_diagram.png" id="gi-diagram-img" alt="Diagrama GI" style="width: 100%; height: 100%; object-fit: contain; display: block;">
-                                    <svg id="tag-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair;"></svg>
+                                    <svg id="tag-overlay" 
+                                        style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair; touch-action: none;"
+                                        onmousedown="handleTagMouseDown(event)"
+                                        onmousemove="handleTagMouseMove(event)"
+                                        onmouseup="handleTagMouseUp(event)"
+                                        onmouseleave="handleTagMouseUp(event)">
+                                    </svg>
                                 </div>
                             </div>
                         </div>

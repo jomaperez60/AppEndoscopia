@@ -82,7 +82,48 @@ const mstTree = {
             'Pólipo / Masa': ['Adenoma periampular', 'Brunneroma', 'Normal'],
             'Papila': ['Normal', 'Prominente', 'Periampular']
         }
+    },
+    'Yeyuno': {
+        'Lumen': ['Normal', 'Estenosis', 'Divertículo', 'Sangre'],
+        'Mucosa': ['Normal', 'Eritema', 'Atrofia (Celiaquía?)', 'Nodularidad'],
+        'Lesiones': ['Pólipo', 'Úlcera', 'Angiectasia']
     }
+};
+
+const wgoLocations = {
+    'Esófago': [
+        'Crico-faringe',
+        'Tercio superior',
+        'Tercio medio',
+        'Tercio inferior',
+        'Cardias',
+        'Totalidad del esófago',
+        'Anastomosis'
+    ],
+    'Estómago': {
+        'Cardias': [],
+        'Fundus': ['Curvatura Mayor', 'Curvatura Menor', 'Pared anterior', 'Pared posterior'],
+        'Cuerpo': ['Curvatura Mayor', 'Curvatura Menor', 'Pared anterior', 'Pared posterior'],
+        'Incisura angularis': [],
+        'Antro': ['Curvatura Mayor', 'Curvatura Menor', 'Pared anterior', 'Pared posterior'],
+        'Pre-pilórica': [],
+        'Píloro': [],
+        'Totalidad del estómago': [],
+        'Anastomosis': [],
+        'Piloroplastia': []
+    },
+    'Duodeno': {
+        'Bulbo': ['Anterior', 'Posterior', 'Proximal', 'Distal'],
+        '2º porción del duodeno': [],
+        'Área papilar': [],
+        'Anastomosis': [],
+        'Totalidad del duodeno examinado': []
+    },
+    'Yeyuno': [
+        'Asa aferente yeyunal',
+        'Asa eferente yeyunal',
+        'Carina yeyunal'
+    ]
 };
 
 const indicationsTree = {
@@ -103,7 +144,7 @@ const indicationsTree = {
         'Metástasis (origen desconocido)': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de']
     },
     'Evaluación': [
-        'Preoperatoria', 'Post-quirúrgica', 'Escrutinio (escrutinio)', 
+        'Preoperatoria', 'Post-quirúrgica', 'Escrutinio', 
         'Historia familiar de neoplasia', 'Anomalía en imagen (especificar)', 
         'Diagnóstico por muestra (especificar)'
     ]
@@ -181,6 +222,17 @@ const diagnosesTree = {
             'Enfermedad de Crohn', 'Divertículo', 'Fístula', 'Tumor maligno', 
             'Parásitos', 'Pólipo(s)', 'Cambios Post-quirúrgicos', 'Cicatriz', 
             'Tumor submucoso', 'Otro (Especificar)'
+        ]
+    },
+    'Yeyuno': {
+        'Diagnóstico principal': {
+            'Normal': [],
+            'Yeyunitis': diagAttrs,
+            'Atrofia vellositaria': diagAttrs,
+            'Angiectasias': diagAttrs
+        },
+        'Otros diagnósticos': [
+            'Pólipo', 'Úlcera', 'Tumor', 'Sangrado activo', 'Cambios post-quirúrgicos'
         ]
     }
 };

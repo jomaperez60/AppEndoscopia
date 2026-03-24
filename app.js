@@ -99,6 +99,7 @@ function updateTopbar() {
 }
 
 let currentOrgan = '';
+let currentWgoLocation = [];
 let currentMstSelection = [];
 var currentIndicationsSelection = [];
 let currentDiagnosesSelection = [];
@@ -520,10 +521,75 @@ function switchMainView(view) {
 
 function openFindings(organ) {
     currentOrgan = organ;
+    currentWgoLocation = [];
     currentMstSelection = [];
-    document.getElementById('mst-title').innerText = `Hallazgos en ${organ}`;
-    renderMstLevel(mstTree[organ], document.getElementById('mst-body'), 0);
+    document.getElementById('mst-title').innerText = `Localización: ${organ}`;
+    const body = document.getElementById('mst-body');
+    body.innerHTML = '';
+    renderWgoLocations(wgoLocations[organ], body, 0);
     document.getElementById('mst-modal').classList.add('active');
+}
+
+function renderWgoLocations(data, container, level) {
+    if (!data) return;
+
+    // Clear subsequent levels
+    const existingLevels = Array.from(container.children);
+    existingLevels.forEach((el, idx) => { if (idx >= level) el.remove(); });
+
+    const div = document.createElement('div');
+    div.className = 'mst-level';
+    div.innerHTML = `<h4>${level === 0 ? 'Localización:' : 'Sub-localización:'}</h4><div class="mst-grid"></div>`;
+    const grid = div.querySelector('.mst-grid');
+
+    if (Array.isArray(data)) {
+        if (data.length === 0) {
+            // No sub-locations, move to MST
+            proceedToMst(container);
+            return;
+        }
+        data.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'mst-btn';
+            btn.innerText = item;
+            btn.onclick = () => {
+                Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                btn.classList.add('selected');
+                currentWgoLocation[level] = item;
+                currentWgoLocation.splice(level + 1);
+                proceedToMst(container);
+            };
+            grid.appendChild(btn);
+        });
+    } else if (typeof data === 'object') {
+        Object.keys(data).forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'mst-btn';
+            btn.innerText = key;
+            btn.onclick = () => {
+                Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                btn.classList.add('selected');
+                currentWgoLocation[level] = key;
+                currentWgoLocation.splice(level + 1);
+                if (data[key] && data[key].length > 0) {
+                    renderWgoLocations(data[key], container, level + 1);
+                } else {
+                    proceedToMst(container);
+                }
+            };
+            grid.appendChild(btn);
+        });
+    }
+    container.appendChild(div);
+}
+
+function proceedToMst(container) {
+    const divider = document.createElement('hr');
+    divider.className = 'mst-divider';
+    container.appendChild(divider);
+    
+    document.getElementById('mst-title').innerText = `Hallazgos en ${currentOrgan} (${currentWgoLocation.join(' - ')})`;
+    renderMstLevel(mstTree[currentOrgan], container, container.children.length);
 }
 
 function renderMstLevel(dataObj, container, level) {
@@ -559,7 +625,7 @@ function renderMstLevel(dataObj, container, level) {
     } else if (typeof dataObj === 'object') {
         const div = document.createElement('div');
         div.className = 'mst-level';
-        div.innerHTML = `<h4>Categoría MST:</h4><div class="mst-grid"></div>`;
+        div.innerHTML = `<h4>Categoría:</h4><div class="mst-grid"></div>`;
         const grid = div.querySelector('.mst-grid');
         
         Object.keys(dataObj).forEach(key => {
@@ -580,9 +646,17 @@ function renderMstLevel(dataObj, container, level) {
 }
 
 function saveFinding() {
-    if (currentMstSelection.length === 0) { alert("Debe seleccionar al menos un descriptor clínico"); return; }
-    const findingText = currentMstSelection.join(' - ');
-    state.findings.push({ organ: currentOrgan, description: findingText });
+    const cleanMst = currentMstSelection.filter(item => item !== undefined && item !== null);
+    if (cleanMst.length === 0) { alert("Debe seleccionar al menos un descriptor clínico"); return; }
+    
+    const locationText = currentWgoLocation.length > 0 ? currentWgoLocation.join(' - ') : 'General';
+    const findingText = cleanMst.join(' - ');
+    
+    state.findings.push({ 
+        organ: currentOrgan, 
+        location: locationText,
+        description: findingText 
+    });
     closeMstModal();
     updateFindingsList();
 }
@@ -996,7 +1070,10 @@ function updateFindingsList() {
     state.findings.forEach((f, idx) => {
         container.innerHTML += `
             <div class="finding-item">
-                <div class="body"><span>${f.organ}</span><p>${f.description}</p></div>
+                <div class="body">
+                    <span>${f.organ} - <small>${f.location}</small></span>
+                    <p>${f.description}</p>
+                </div>
                 <div class="actions"><button onclick="deleteFinding(${idx})"><i class="fa-solid fa-trash"></i></button></div>
             </div>`;
     });
@@ -1007,7 +1084,7 @@ function updateAutoDiagnoses() {
     if (state.findings.length === 0) {
         diagArea.value = "Examen endoscópico normal hasta la porción evaluada.";
     } else {
-        const order = { 'Esófago': 1, 'Estómago': 2, 'Duodeno': 3 };
+        const order = { 'Esófago': 1, 'Estómago': 2, 'Duodeno': 3, 'Yeyuno': 4 };
         const sortedFindings = [...state.findings].sort((a, b) => order[a.organ] - order[b.organ]);
         
         const uniqueOrgans = [...new Set(sortedFindings.map(f => f.organ))];
@@ -1030,13 +1107,13 @@ function generateReport(skipSave = false) {
     if (state.findings.length === 0) {
         findingsHtml = '<p>Normal.</p>';
     } else {
-        const byOrgan = { 'Esófago': [], 'Estómago': [], 'Duodeno': [] };
-        state.findings.forEach(f => { if(byOrgan[f.organ]) byOrgan[f.organ].push(f.description); });
+        const byOrgan = { 'Esófago': [], 'Estómago': [], 'Duodeno': [], 'Yeyuno': [] };
+        state.findings.forEach(f => { if(byOrgan[f.organ]) byOrgan[f.organ].push(`${f.location}: ${f.description}`); });
         
-        ['Esófago', 'Estómago', 'Duodeno'].forEach(org => {
-            if (byOrgan[org].length > 0) {
-                findingsHtml += `<div style="margin-bottom: 12px;"><strong>${org}:</strong> <span style="color: #333;">${byOrgan[org].join(', ')}.</span></div>`;
-            } else {
+        ['Esófago', 'Estómago', 'Duodeno', 'Yeyuno'].forEach(org => {
+            if (byOrgan[org] && byOrgan[org].length > 0) {
+                findingsHtml += `<div style="margin-bottom: 12px;"><strong>${org}:</strong> <span style="color: #333;">${byOrgan[org].join('; ')}.</span></div>`;
+            } else if (org !== 'Yeyuno') {
                 findingsHtml += `<div style="margin-bottom: 12px;"><strong>${org}:</strong> Normal.</div>`;
             }
         });

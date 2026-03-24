@@ -43,13 +43,52 @@ let isDraggingTag = false;
 
 function calculateAge(dateString) {
     if (!dateString) { state.patient.edad = ''; updateTopbar(); return; }
+    
+    let birthDate;
+    const parts = dateString.split(/[-/]/);
+    if (parts.length === 3) {
+        if (parts[0].length === 4) { // YYYY-MM-DD (ISO)
+            birthDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        } else { // DD-MM-YYYY or DD/MM/YYYY
+            birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+    } else {
+        birthDate = new Date(dateString);
+    }
+    
+    if (isNaN(birthDate.getTime())) { state.patient.edad = ''; updateTopbar(); return; }
+
     const today = new Date();
-    const birthDate = new Date(dateString);
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    state.patient.edad = age;
+    state.patient.edad = Math.max(0, age);
     updateTopbar();
+}
+
+function formatDate(dateInput) {
+    if (!dateInput) return '-';
+    const val = String(dateInput).trim();
+    
+    // 1. Handle DD-MM-YYYY or DD/MM/YYYY (Latin)
+    const dmyMatch = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/.exec(val);
+    if (dmyMatch) {
+         return `${dmyMatch[1].padStart(2, '0')}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[3]}`;
+    }
+
+    // 2. Handle ISO YYYY-MM-DD (Input Date)
+    const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(val);
+    if (isoMatch) {
+         return `${isoMatch[3]}-${isoMatch[2]}-${isoMatch[1]}`;
+    }
+
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return val;
+    
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
 }
 
 function updateTopbar() {
@@ -61,8 +100,20 @@ function updateTopbar() {
 
 let currentOrgan = '';
 let currentMstSelection = [];
+var currentIndicationsSelection = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Flatpickr for Birth Date
+    flatpickr("#paciente-fnacimiento", {
+        dateFormat: "d-m-Y",
+        locale: "es",
+        allowInput: true,
+        onChange: function(selectedDates, dateStr) {
+            calculateAge(dateStr);
+            state.patient.fnacimiento = dateStr;
+        }
+    });
+
     const tabs = document.querySelectorAll('.tab');
     const tabContents = document.querySelectorAll('.tab-content');
 
@@ -78,7 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ['indicacion', 'sedacion', 'instrumento', 'extension'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.addEventListener('change', (e) => state.metadata[id] = e.target.value);
+        if(el) {
+            el.addEventListener(id === 'indicacion' ? 'input' : 'change', (e) => {
+                state.metadata[id] = e.target.value;
+            });
+        }
     });
 
     ['referente', 'asa', 'anticoagulante', 'preparacion'].forEach(id => {
@@ -534,6 +589,107 @@ function saveFinding() {
 function closeMstModal() { document.getElementById('mst-modal').classList.remove('active'); }
 function deleteFinding(index) { state.findings.splice(index, 1); updateFindingsList(); }
 
+// --- Indications Logic ---
+
+function openIndications() {
+    currentIndicationsSelection = [];
+    document.getElementById('indications-title').innerText = "Seleccionar Indicación";
+    document.getElementById('indications-body').innerHTML = '';
+    renderIndicationsLevel(indicationsTree, document.getElementById('indications-body'), 0);
+    document.getElementById('indications-modal').classList.add('active');
+}
+
+function renderIndicationsLevel(dataObj, container, level) {
+    if (!dataObj) return;
+
+    const existingLevels = Array.from(container.children);
+    existingLevels.forEach((el, idx) => { if (idx >= level) el.remove(); });
+
+    const div = document.createElement('div');
+    div.className = 'mst-level';
+    div.innerHTML = `<h4>${level === 0 ? 'Categoría:' : 'Especificación:'}</h4><div class="mst-grid"></div>`;
+    const grid = div.querySelector('.mst-grid');
+
+    const handleSelection = (item) => {
+        // Remove old specification inputs if any
+        const oldSpec = div.querySelector('.spec-container');
+        if (oldSpec) oldSpec.remove();
+
+        currentIndicationsSelection[level] = item;
+        currentIndicationsSelection.splice(level + 1);
+        
+        if (item.toLowerCase().includes('(especificar)')) {
+            const specDiv = document.createElement('div');
+            specDiv.className = 'spec-container';
+            specDiv.style.cssText = 'margin-top: 12px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;';
+            specDiv.innerHTML = `
+                <label style="display:block; margin-bottom: 6px; font-size: 0.8rem; color: #64748b; font-weight: 600;">DETALLE ADICIONAL:</label>
+                <input type="text" placeholder="Escriba el detalle aquí..." 
+                       style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit;"
+                       oninput="updateIndicationSpec(${level}, '${item}', this.value)">
+            `;
+            div.appendChild(specDiv);
+        }
+    };
+
+    if (Array.isArray(dataObj)) {
+        dataObj.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'mst-btn';
+            btn.innerText = item;
+            btn.onclick = () => {
+                Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                btn.classList.add('selected');
+                handleSelection(item);
+            };
+            grid.appendChild(btn);
+        });
+    } else {
+        Object.keys(dataObj).forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'mst-btn';
+            btn.innerText = key;
+            btn.onclick = () => {
+                Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                btn.classList.add('selected');
+                handleSelection(key);
+                renderIndicationsLevel(dataObj[key], container, level + 1);
+            };
+            grid.appendChild(btn);
+        });
+    }
+    container.appendChild(div);
+}
+
+function saveIndication() {
+    if (currentIndicationsSelection.length === 0) {
+        console.warn("No selection made in Indications modal.");
+        return;
+    }
+    
+    const filtered = currentIndicationsSelection.filter(item => item && item.trim().length > 0);
+    const text = filtered.join(' - ');
+    
+    console.log("Saving indication text:", text);
+    
+    const input = document.getElementById('indicacion');
+    if (input) {
+        input.value = text;
+        input.dispatchEvent(new Event('input'));
+    }
+    
+    state.metadata.indicacion = text;
+    closeIndications();
+}
+
+function updateIndicationSpec(level, baseItem, value) {
+    if (!currentIndicationsSelection) currentIndicationsSelection = [];
+    const cleanItem = baseItem.replace('(especificar)', '').trim();
+    currentIndicationsSelection[level] = value.trim() ? `${cleanItem}: ${value}` : cleanItem;
+}
+
+function closeIndications() { document.getElementById('indications-modal').classList.remove('active'); }
+
 // --- Image Tagging Logic ---
 
 function handleImageUpload(e) {
@@ -805,7 +961,7 @@ function generateReport(skipSave = false) {
 
             <div style="text-align: center; margin-bottom: 35px;">
                 <h2 style="margin: 0; font-size: 1.4rem; text-transform: uppercase; border-bottom: 1px solid #eee; display: inline-block; padding: 0 40px 5px 40px;">Informe Médico de Endoscopia</h2>
-                <div style="font-size: 0.9rem; color: #666; margin-top: 8px;">Fecha de emisión: ${new Date().toLocaleDateString('es-ES')}</div>
+                <div style="font-size: 0.9rem; color: #666; margin-top: 8px;">Fecha de emisión: ${formatDate()}</div>
             </div>
 
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 0.95rem;">
@@ -816,16 +972,16 @@ function generateReport(skipSave = false) {
                     <td style="padding: 10px;">${state.patient.dni || 'No registro'}</td>
                 </tr>
                 <tr style="border: 1px solid #eee;">
-                    <td style="padding: 10px; font-weight: bold;">EDAD / SEXO:</td>
-                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.patient.edad ? state.patient.edad + ' años' : '-'} / ${state.patient.sexo || '-'}</td>
-                    <td style="padding: 10px; font-weight: bold;">PROCEDENCIA:</td>
-                    <td style="padding: 10px;">${state.patient.municipio ? state.patient.municipio + ', ' : ''}${state.patient.departamento || '-'}</td>
+                    <td style="padding: 10px; font-weight: bold;">F. NACIMIENTO:</td>
+                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.patient.fnacimiento ? formatDate(state.patient.fnacimiento) : '-'} (${state.patient.edad ? state.patient.edad + ' años' : '-'})</td>
+                    <td style="padding: 10px; font-weight: bold;">SEXO / PROC:</td>
+                    <td style="padding: 10px;">${state.patient.sexo || '-'} / ${state.patient.municipio ? state.patient.municipio + ', ' : ''}${state.patient.departamento || '-'}</td>
                 </tr>
                 <tr style="border: 1px solid #eee;">
                     <td style="padding: 10px; font-weight: bold;">MÉDICO REF:</td>
                     <td style="padding: 10px; border-right: 1px solid #eee;">${state.clinical.referente || 'No especificado'}</td>
                     <td style="padding: 10px; font-weight: bold;">INDICACIÓN:</td>
-                    <td style="padding: 10px;">${state.metadata.indicacion || 'Screening'}</td>
+                    <td style="padding: 10px;">${state.metadata.indicacion || 'Escrutinio'}</td>
                 </tr>
             </table>
 
@@ -949,8 +1105,8 @@ function saveToHistory() {
 
     const record = {
         id: state.currentStudyId || Date.now(),
-        date: new Date().toLocaleDateString('es-ES'),
-        dateTime: new Date().toLocaleString('es-ES'),
+        date: formatDate(),
+        dateTime: new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-'),
         patient: { ...state.patient },
         clinical: { ...state.clinical },
         metadata: { ...state.metadata },

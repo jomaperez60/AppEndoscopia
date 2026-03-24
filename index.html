@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 </head>
 </head>
 <body class="login-active">
@@ -58,25 +61,30 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <header class="topbar">
-                <div class="patient-banner">
-                    <div class="patient-info" id="topbar-patient-info">
-                        <h2 id="topbar-name">Nuevo Paciente</h2>
-                        <span class="tag" id="topbar-dni">DNI: -</span>
-                        <span class="tag" id="topbar-age">Edad: -</span>
-                        <span class="tag" id="topbar-sex">Sexo: -</span>
-                    </div>
-                    <div class="exam-info">
-                        <span class="badge info">Endoscopia Digestiva Alta (EGD)</span>
-                    </div>
+            <header class="topbar" style="flex-direction: column; gap: 16px; padding: 20px 24px;">
+                <div class="exam-info" style="width: 100%; text-align: center;">
+                    <span class="badge info" style="font-size: 1.3rem; padding: 10px 32px; border-radius: 10px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);">Endoscopia Digestiva Alta (EGD)</span>
                 </div>
-                <div class="actions" id="topbar-actions">
-                    <button class="btn btn-secondary" onclick="saveToHistory()"><i class="fa-solid fa-save"></i> Guardar Borrador</button>
-                    <button class="btn btn-primary" onclick="generateReport()"><i class="fa-solid fa-file-pdf"></i> Generar Reporte</button>
-                </div>
-                <div class="actions" id="history-actions" style="display: none;">
-                    <button class="btn btn-secondary" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> Exportar a Excel (CSV)</button>
-                    <button class="btn btn-outline" onclick="clearHistory()" style="color: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-trash"></i> Borrar Todo</button>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 15px;">
+                    <div class="patient-banner">
+                        <div class="patient-info" id="topbar-patient-info">
+                            <h2 id="topbar-name">Nuevo Paciente</h2>
+                            <span class="tag" id="topbar-dni">DNI: -</span>
+                            <span class="tag" id="topbar-age">Edad: -</span>
+                            <span class="tag" id="topbar-sex">Sexo: -</span>
+                        </div>
+                    </div>
+                    
+                    <div class="actions" id="topbar-actions">
+                        <button class="btn btn-secondary" onclick="saveToHistory()"><i class="fa-solid fa-save"></i> Guardar Borrador</button>
+                        <button class="btn btn-primary" onclick="generateReport()"><i class="fa-solid fa-file-pdf"></i> Generar Reporte</button>
+                    </div>
+                    
+                    <div class="actions" id="history-actions" style="display: none;">
+                        <button class="btn btn-secondary" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> Exportar a Excel (CSV)</button>
+                        <button class="btn btn-outline" onclick="clearHistory()" style="color: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-trash"></i> Borrar Todo</button>
+                    </div>
                 </div>
             </header>
 
@@ -104,7 +112,7 @@
                                 </div>
                                 <div class="input-group">
                                     <label>Fecha de Nacimiento</label>
-                                    <input type="date" id="paciente-fnacimiento" onchange="calculateAge(this.value)">
+                                    <input type="text" id="paciente-fnacimiento" placeholder="DD-MM-AAAA" oninput="calculateAge(this.value)">
                                 </div>
                                 <div class="input-group">
                                     <label>Sexo</label>
@@ -175,14 +183,10 @@
                             <div class="form-grid">
                                 <div class="input-group">
                                     <label>Indicación Principal</label>
-                                    <select id="indicacion">
-                                        <option value="">Seleccione indicación...</option>
-                                        <option value="HDA">Hemorragia Digestiva Alta</option>
-                                        <option value="Disfagia">Disfagia</option>
-                                        <option value="ERGE">Reflujo Gastroesofágico</option>
-                                        <option value="Screening">Cribado</option>
-                                        <option value="DolorAbdominal">Dolor Abdominal</option>
-                                    </select>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="indicacion" placeholder="Seleccione o escriba..." style="flex: 1;">
+                                        <button class="btn btn-secondary" onclick="openIndications()" style="padding: 0 12px;"><i class="fa-solid fa-list-ul"></i></button>
+                                    </div>
                                 </div>
                                 <div class="input-group">
                                     <label>Sedación / Anestesia</label>
@@ -582,8 +586,25 @@
             </div>
         </main>
     </div>
+            <!-- Modal de Indicaciones Estructuradas -->
+            <div id="indications-modal" class="modal">
+                <div class="modal-content card" style="width: 700px; max-height: 85vh;">
+                    <div class="modal-header">
+                        <h3 id="indications-title">Indicaciones del Procedimiento</h3>
+                        <button class="btn-close" onclick="closeIndications()"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="modal-body" id="indications-body" style="overflow-y: auto;">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeIndications()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="saveIndication()">Aceptar Selección</button>
+                    </div>
+                </div>
+            </div>
+
     <script src="mst_data.js"></script>
     <script src="hn_data.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 </html>

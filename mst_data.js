@@ -85,3 +85,27 @@ const mstTree = {
     }
 };
 
+const indicationsTree = {
+    'Síntomas': [
+        'Disfagia', 'Hematemesis', 'Melena', 'Pirosis', 'Náusea/Vómito', 
+        'Pérdida de peso', 'Anemia', 'Molestias abdominales'
+    ],
+    'Enfermedades': {
+        'Tumor': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Enfermedad por reflujo': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Úlcera': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Gastritis': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Estenosis': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Sangrado gastrointestinal': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Várices': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Lesiones precancerosas': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Cuerpo Extraño': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de'],
+        'Metástasis (origen desconocido)': ['Establecido', 'Exclusión de', 'Sospecha de', 'Seguimiento de', 'Tratamiento de']
+    },
+    'Evaluación': [
+        'Preoperatoria', 'Post-quirúrgica', 'Escrutinio (escrutinio)', 
+        'Historia familiar de neoplasia', 'Anomalía en imagen (especificar)', 
+        'Diagnóstico por muestra (especificar)'
+    ]
+};
+

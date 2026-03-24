@@ -598,55 +598,140 @@ function renderMstLevel(dataObj, container, level) {
     const existingLevels = Array.from(container.children);
     existingLevels.forEach((el, idx) => { if (idx >= level) el.remove(); });
 
-    if (Array.isArray(dataObj)) {
-        const div = document.createElement('div');
-        div.className = 'mst-level';
-        div.innerHTML = `<h4>Especificación:</h4><div class="mst-grid"></div>`;
-        const grid = div.querySelector('.mst-grid');
+    // Check if it's a multi-attribute container
+    if (typeof dataObj === 'object' && !Array.isArray(dataObj)) {
+        const keys = Object.keys(dataObj);
+        const isMulti = keys.length > 1 && keys.every(k => Array.isArray(dataObj[k]) || (typeof dataObj[k] === 'object' && Object.keys(dataObj[k]).length === 0));
         
-        if (dataObj.length === 0) {
-             currentMstSelection.splice(level);
-             return;
+        if (isMulti) {
+            renderAttributeGroups(dataObj, container, level);
+            return;
         }
+    }
 
+    const div = document.createElement('div');
+    div.className = 'mst-level';
+    div.innerHTML = `<h4>${level === 0 ? 'Categoría:' : 'Especificación:'}</h4><div class="mst-grid"></div>`;
+    const grid = div.querySelector('.mst-grid');
+
+    const handleSelection = (item) => {
+        const oldSpec = div.querySelector('.spec-container');
+        if (oldSpec) oldSpec.remove();
+
+        currentMstSelection[level] = item;
+        currentMstSelection.splice(level + 1);
+        
+        if (item.toLowerCase().includes('(especificar)')) {
+            const specDiv = document.createElement('div');
+            specDiv.className = 'spec-container';
+            specDiv.style.cssText = 'margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px;';
+            specDiv.innerHTML = `
+                <label style="display:block; margin-bottom: 6px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">DETALLE ADICIONAL:</label>
+                <input type="text" placeholder="Escriba el detalle aquí..." 
+                       style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; background: var(--bg-dark); color: var(--text-main);"
+                       oninput="updateMstSpec(${level}, '${item}', this.value)">
+            `;
+            div.appendChild(specDiv);
+        }
+    };
+
+    if (Array.isArray(dataObj)) {
+        if (dataObj.length === 0) return;
         dataObj.forEach(item => {
             const btn = document.createElement('button');
             btn.className = 'mst-btn';
             btn.innerText = item;
-            btn.onclick = (e) => {
+            btn.onclick = () => {
                 Array.from(grid.children).forEach(c => c.classList.remove('selected'));
                 btn.classList.add('selected');
-                currentMstSelection[level] = item;
-                currentMstSelection.splice(level + 1);
+                handleSelection(item);
             };
             grid.appendChild(btn);
         });
-        container.appendChild(div);
     } else if (typeof dataObj === 'object') {
-        const div = document.createElement('div');
-        div.className = 'mst-level';
-        div.innerHTML = `<h4>Categoría:</h4><div class="mst-grid"></div>`;
-        const grid = div.querySelector('.mst-grid');
-        
         Object.keys(dataObj).forEach(key => {
             const btn = document.createElement('button');
             btn.className = 'mst-btn';
             btn.innerText = key;
-            btn.onclick = (e) => {
+            btn.onclick = () => {
                 Array.from(grid.children).forEach(c => c.classList.remove('selected'));
                 btn.classList.add('selected');
-                currentMstSelection[level] = key;
-                currentMstSelection.splice(level + 1);
+                handleSelection(key);
                 renderMstLevel(dataObj[key], container, level + 1);
             };
             grid.appendChild(btn);
         });
-        container.appendChild(div);
     }
+    container.appendChild(div);
+}
+
+function renderAttributeGroups(dataObj, container, level) {
+    const mainDiv = document.createElement('div');
+    mainDiv.className = 'mst-multi-container';
+    mainDiv.style.cssText = 'margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px;';
+    
+    currentMstSelection[level] = { __multi: true, values: {} };
+    currentMstSelection.splice(level + 1);
+
+    Object.keys(dataObj).forEach(groupKey => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'mst-attribute-group';
+        groupDiv.style.marginBottom = '20px';
+        groupDiv.innerHTML = `<h4 style="color: var(--primary); font-size: 0.85rem; margin-bottom: 8px;">${groupKey.toUpperCase()}:</h4><div class="mst-grid"></div>`;
+        const grid = groupDiv.querySelector('.mst-grid');
+        
+        const options = dataObj[groupKey];
+        if (Array.isArray(options)) {
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'mst-btn';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    
+                    const oldSpec = groupDiv.querySelector('.spec-container');
+                    if (oldSpec) oldSpec.remove();
+
+                    currentMstSelection[level].values[groupKey] = opt;
+
+                    if (opt.toLowerCase().includes('(especificar)')) {
+                        const specDiv = document.createElement('div');
+                        specDiv.className = 'spec-container';
+                        specDiv.style.cssText = 'margin-top: 8px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 4px;';
+                        specDiv.innerHTML = `<input type="text" placeholder="Detalle..." style="width: 100%; padding: 6px 10px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;" oninput="updateMstMultiSpec(${level}, '${groupKey}', '${opt}', this.value)">`;
+                        groupDiv.appendChild(specDiv);
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+        mainDiv.appendChild(groupDiv);
+    });
+    container.appendChild(mainDiv);
+}
+
+function updateMstMultiSpec(level, groupKey, baseItem, value) {
+    const cleanItem = baseItem.replace('(especificar)', '').trim();
+    currentMstSelection[level].values[groupKey] = value.trim() ? `${cleanItem}: ${value}` : cleanItem;
+}
+
+function updateMstSpec(level, baseItem, value) {
+    const cleanItem = baseItem.replace('(especificar)', '').trim();
+    currentMstSelection[level] = value.trim() ? `${cleanItem}: ${value}` : cleanItem;
 }
 
 function saveFinding() {
-    const cleanMst = currentMstSelection.filter(item => item !== undefined && item !== null);
+    const cleanMst = currentMstSelection.filter(item => item !== undefined && item !== null).map(item => {
+        if (typeof item === 'object' && item.__multi) {
+            const attributes = Object.entries(item.values)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(', ');
+            return attributes;
+        }
+        return item;
+    });
+    
     if (cleanMst.length === 0) { alert("Debe seleccionar al menos un descriptor clínico"); return; }
     
     const locationText = currentWgoLocation.length > 0 ? currentWgoLocation.join(' - ') : 'General';
@@ -680,13 +765,23 @@ function renderIndicationsLevel(dataObj, container, level) {
     const existingLevels = Array.from(container.children);
     existingLevels.forEach((el, idx) => { if (idx >= level) el.remove(); });
 
+    // Check if it's a multi-attribute container
+    if (typeof dataObj === 'object' && !Array.isArray(dataObj)) {
+        const keys = Object.keys(dataObj);
+        const isMulti = keys.length > 1 && keys.every(k => Array.isArray(dataObj[k]) || (typeof dataObj[k] === 'object' && Object.keys(dataObj[k]).length === 0));
+        
+        if (isMulti) {
+            renderIndicationAttributeGroups(dataObj, container, level);
+            return;
+        }
+    }
+
     const div = document.createElement('div');
     div.className = 'mst-level';
     div.innerHTML = `<h4>${level === 0 ? 'Categoría:' : 'Especificación:'}</h4><div class="mst-grid"></div>`;
     const grid = div.querySelector('.mst-grid');
 
     const handleSelection = (item) => {
-        // Remove old specification inputs if any
         const oldSpec = div.querySelector('.spec-container');
         if (oldSpec) oldSpec.remove();
 
@@ -696,11 +791,11 @@ function renderIndicationsLevel(dataObj, container, level) {
         if (item.toLowerCase().includes('(especificar)')) {
             const specDiv = document.createElement('div');
             specDiv.className = 'spec-container';
-            specDiv.style.cssText = 'margin-top: 12px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;';
+            specDiv.style.cssText = 'margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 6px;';
             specDiv.innerHTML = `
-                <label style="display:block; margin-bottom: 6px; font-size: 0.8rem; color: #64748b; font-weight: 600;">DETALLE ADICIONAL:</label>
+                <label style="display:block; margin-bottom: 6px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">DETALLE ADICIONAL:</label>
                 <input type="text" placeholder="Escriba el detalle aquí..." 
-                       style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit;"
+                       style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; background: var(--bg-dark); color: var(--text-main);"
                        oninput="updateIndicationSpec(${level}, '${item}', this.value)">
             `;
             div.appendChild(specDiv);
@@ -736,13 +831,67 @@ function renderIndicationsLevel(dataObj, container, level) {
     container.appendChild(div);
 }
 
+function renderIndicationAttributeGroups(dataObj, container, level) {
+    const mainDiv = document.createElement('div');
+    mainDiv.className = 'mst-multi-container';
+    
+    currentIndicationsSelection[level] = { __multi: true, values: {} };
+    currentIndicationsSelection.splice(level + 1);
+
+    Object.keys(dataObj).forEach(groupKey => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'mst-attribute-group';
+        groupDiv.style.marginBottom = '20px';
+        groupDiv.innerHTML = `<h4 style="color: var(--primary); font-size: 0.85rem; margin-bottom: 8px;">${groupKey.toUpperCase()}:</h4><div class="mst-grid"></div>`;
+        const grid = groupDiv.querySelector('.mst-grid');
+        
+        const options = dataObj[groupKey];
+        if (Array.isArray(options)) {
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'mst-btn';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    const oldSpec = groupDiv.querySelector('.spec-container');
+                    if (oldSpec) oldSpec.remove();
+
+                    currentIndicationsSelection[level].values[groupKey] = opt;
+
+                    if (opt.toLowerCase().includes('(especificar)')) {
+                        const specDiv = document.createElement('div');
+                        specDiv.className = 'spec-container';
+                        specDiv.style.cssText = 'margin-top: 8px; padding: 10px; background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: 4px;';
+                        specDiv.innerHTML = `<input type="text" placeholder="Detalle..." style="width: 100%; padding: 6px 10px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;" oninput="updateIndicationMultiSpec(${level}, '${groupKey}', '${opt}', this.value)">`;
+                        groupDiv.appendChild(specDiv);
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+        mainDiv.appendChild(groupDiv);
+    });
+    container.appendChild(mainDiv);
+}
+
+function updateIndicationMultiSpec(level, groupKey, baseItem, value) {
+    const cleanItem = baseItem.replace('(especificar)', '').trim();
+    currentIndicationsSelection[level].values[groupKey] = value.trim() ? `${cleanItem}: ${value}` : cleanItem;
+}
+
 function saveIndication() {
     if (currentIndicationsSelection.length === 0) {
         console.warn("No selection made in Indications modal.");
         return;
     }
     
-    const filtered = currentIndicationsSelection.filter(item => item && item.trim().length > 0);
+    const filtered = currentIndicationsSelection.filter(item => item !== undefined && item !== null).map(item => {
+        if (typeof item === 'object' && item.__multi) {
+            return Object.entries(item.values).map(([k, v]) => `${k}: ${v}`).join(', ');
+        }
+        return item;
+    });
     const text = filtered.join(' - ');
     
     console.log("Saving indication text:", text);
@@ -781,6 +930,17 @@ function renderDiagnosesLevel(dataObj, container, level) {
 
     const existingLevels = Array.from(container.children);
     existingLevels.forEach((el, idx) => { if (idx >= level) el.remove(); });
+
+    // Check if it's a multi-attribute container
+    if (typeof dataObj === 'object' && !Array.isArray(dataObj)) {
+        const keys = Object.keys(dataObj);
+        const isMulti = keys.length > 1 && keys.every(k => Array.isArray(dataObj[k]) || (typeof dataObj[k] === 'object' && Object.keys(dataObj[k]).length === 0));
+        
+        if (isMulti) {
+            renderDiagnosesAttributeGroups(dataObj, container, level);
+            return;
+        }
+    }
 
     const div = document.createElement('div');
     div.className = 'mst-level';
@@ -823,19 +983,66 @@ function renderDiagnosesLevel(dataObj, container, level) {
     container.appendChild(div);
 }
 
+function renderDiagnosesAttributeGroups(dataObj, container, level) {
+    const mainDiv = document.createElement('div');
+    mainDiv.className = 'mst-multi-container';
+    
+    currentDiagnosesSelection[level] = { __multi: true, values: {} };
+    currentDiagnosesSelection.splice(level + 1);
+
+    Object.keys(dataObj).forEach(groupKey => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'mst-attribute-group';
+        groupDiv.style.marginBottom = '20px';
+        groupDiv.innerHTML = `<h4 style="color: var(--primary); font-size: 0.85rem; margin-bottom: 8px;">${groupKey.toUpperCase()}:</h4><div class="mst-grid"></div>`;
+        const grid = groupDiv.querySelector('.mst-grid');
+        
+        const options = dataObj[groupKey];
+        if (Array.isArray(options)) {
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'mst-btn';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    currentDiagnosesSelection[level].values[groupKey] = opt;
+                    updateDiagnosesPreview();
+                };
+                grid.appendChild(btn);
+            });
+        }
+        mainDiv.appendChild(groupDiv);
+    });
+    container.appendChild(mainDiv);
+}
+
 function updateDiagnosesPreview() {
     const preview = document.getElementById('current-diag-preview');
-    preview.innerText = currentDiagnosesSelection.join(' > ');
+    const filtered = currentDiagnosesSelection.filter(item => item !== undefined && item !== null).map(item => {
+        if (typeof item === 'object' && item.__multi) {
+            return Object.entries(item.values).map(([k, v]) => `${k}: ${v}`).join(', ');
+        }
+        return item;
+    });
+    preview.innerText = filtered.join(' > ');
 }
 
 function saveDiagnoses() {
     if (currentDiagnosesSelection.length === 0) return;
     
+    const formatted = currentDiagnosesSelection.filter(item => item !== undefined && item !== null).map(item => {
+        if (typeof item === 'object' && item.__multi) {
+            return Object.entries(item.values).map(([k, v]) => `${k}: ${v}`).join(', ');
+        }
+        return item;
+    });
+    
     // Format the selection (e.g., Stomach: Ulcer - Established)
-    const organ = currentDiagnosesSelection[0];
-    const category = currentDiagnosesSelection[1];
-    const diag = currentDiagnosesSelection[2];
-    const details = currentDiagnosesSelection.slice(3).join(' - ');
+    const organ = formatted[0];
+    const category = formatted[1];
+    const diag = formatted[2];
+    const details = formatted.slice(3).join(' - ');
     
     let text = `${organ}: ${diag}`;
     if (details) text += ` (${details})`;

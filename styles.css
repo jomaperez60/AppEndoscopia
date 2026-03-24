@@ -241,6 +241,7 @@ body.login-active #app-container {
 .input-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
 select, input, textarea { width: 100%; padding: 10px 12px; background-color: var(--bg-dark); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-main); font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.2s; background-image: none; }
 select:focus, input:focus, textarea:focus { border-color: var(--primary); }
+#diag-final { font-size: 1.2rem; font-weight: 600; line-height: 1.6; color: #fff; }
 .auto-filled { background-color: rgba(255, 255, 255, 0.02); border-style: dashed; cursor: not-allowed; }
 
 .anatomy-selector { margin-bottom: 24px; }
@@ -315,12 +316,20 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
     overflow: hidden;
 }
 #gi-diagram-img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.finding-item .body p { font-size: 0.95rem; font-weight: 500; }
-.finding-item .body span { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
-.finding-item .body span small { font-weight: 600; color: var(--primary); }
+.finding-item .body span { font-size: 1.25rem; color: #60a5fa; font-weight: 700; margin-bottom: 6px; display: block; }
+.finding-item .body span small { font-weight: 800; color: #93c5fd; }
+.finding-item .body p { font-size: 1.05rem; font-weight: 600; color: #fff; margin-top: 4px; }
 .finding-item .actions button { background: none; border: none; color: var(--danger); cursor: pointer; }
 
 hr.mst-divider { border: 0; border-top: 1px dashed var(--border); margin: 20px 0; }
+.mst-multi-container { display: flex; flex-direction: column; gap: 5px; }
+.mst-attribute-group { 
+    background: rgba(255, 255, 255, 0.02); 
+    border: 1px solid var(--border); 
+    padding: 15px; 
+    border-radius: var(--radius-md);
+}
+.mst-attribute-group h4 { margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .report-document { background: white; color: black; padding: 40px; border-radius: 4px; }
 .report-document h1 { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.5rem; }

@@ -1,73 +1,239 @@
 const mstTree = {
     'Esófago': {
-        'Lumen': {
+        'Luz': {
+            'Normal': [],
+            'Dilatada': [],
             'Estenosis': {
-                'Tipo': ['Benigna (Péptica)', 'Cáustica', 'Post-radioterapia', 'Sospecha de Malignidad'],
-                'Pasibilidad': ['Franqueable', 'No franqueable']
+                'Aspecto': ['Extrínseca', 'Benigna intrínseca', 'Maligna intrínseca'],
+                'Longitud (cm)': ['(especificar)'],
+                'Sobrepable': ['Si', 'Tras dilatación', 'No']
             },
-            'Divertículo': {
-                'Localización': ['Zenker (Cricofaríngeo)', 'Medio-esofágico (Tracción)', 'Epifrénico'],
-                'Signos': ['Retención de alimento', 'Normal']
+            'Compresión Extrínseca': {
+                'Tamaño': ['Pequeña', 'Grande']
             },
-            'Hernia Hiatal': ['Pequeña (< 2cm)', 'Mediana (2-5cm)', 'Grande (> 5cm)', 'Paraesofágica'],
-            'Compresión Extrínseca': ['Pulsátil (Vascular)', 'Fija'],
-            'Otros': ['Anillo / Membrana (Web)', 'Acalasia (Signo de pico)', 'Normal']
+            'Membrana': [],
+            'Anillo (incluye Schatzki)': [],
+            'Hernia de Hiato': {
+                'Tamaño / Volumen': ['Pequeña', 'Mediana', 'Grande'],
+                'Línea Z (cm desde incisivos)': ['(especificar)'],
+                'Estrechez hiatal (cm desde incisivos)': ['(especificar)']
+            },
+            'Esfínter esofágico inferior (Cardias)': {
+                'Tono': ['Abierto', 'Hipertónico']
+            },
+            'Evidencia de cirugía previa': {
+                'Anastomosis': {
+                    'Tipo': ['Esófagoyeyunal', 'Esófagogástrica', 'Esófagocolónica'],
+                    'Cm desde incisivos': ['(especificar)']
+                },
+                'Material de sutura visible': ['Si', 'No']
+            }
         },
-        'Contenidos': ['Alimento / Bezoar', 'Sangre fresca', 'Sangre digerida', 'Cuerpo extraño', 'Normal'],
-        'Mucosa': {
-            'Esofagitis': {
-                'Grado (Los Ángeles)': ['Grado A', 'Grado B', 'Grado C', 'Grado D'],
-                'Otros': ['Candida (Placas)', 'Eosinofílica (Traquealizada)', 'Corrosiva']
+        'Contenido': {
+            'Cuerpo extraño': {
+                'Tipo': ['(especificar)']
             },
-            'Várices': {
-                'Tamaño': ['Grado I (Pequeñas, desaparecen con insuflación)', 'Grado II (Tortuosas < 1/3)', 'Grado III (Grandes, ocupan > 1/3)'],
-                'Signos Rojos': ['Ausentes', 'Puntos rojos cereza', 'Nipple sign (Blanco)']
+            'Sangre': {
+                'Aspecto': ['Roja', 'Coágulo', 'Hematina (sangre alterada)']
+            },
+            'Alimento': [],
+            'Bilis': [],
+            'Prótesis': {
+                'Tipo': ['(especificar)']
+            },
+            'Banda': {
+                'Número': ['(especificar)'],
+                'Posición': ['Libre', 'Adherido']
+            }
+        },
+        'Mucosa': {
+            'Eritematosa (Hiperémica)': {
+                'Extensión': ['Parcheada', 'Difusa']
+            },
+            'Esofagitis': {
+                'Grado (Savary-Miller)': ['Grado I', 'Grado II', 'Grado III', 'Grado IV'],
+                'Sangrado': ['Si', 'No']
             },
             'Esófago de Barrett': {
-                'Praga (C)': ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6+'],
-                'Praga (M)': ['M1', 'M2', 'M3', 'M4', 'M5', 'M6+'],
-                'Islotes': ['Presentes', 'Ausentes']
+                'Línea Z (cm desde incisivos)': ['(especificar)'],
+                'Extremo sup. pliegues gástricos (cm desde incisivos)': ['(especificar)']
             },
-            'Otros': ['Eritema', 'Atrofia', 'Friabilidad', 'Acantosis glucogénica', 'Normal']
+            'Candidiasis': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+            },
+            'Mucosa esclerosada (fibrosis)': {
+                'Tipo': ['Espontánea', 'Post-tratamiento'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+            },
+            'Varices': {
+                'Grado': ['Grado I', 'Grado II', 'Grado III'],
+                'Anchura estimada (mm)': ['(especificar)'],
+                'Límite superior (cm desde incisivos)': ['(especificar)'],
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Si', 'No'],
+                'Signos rojos': ['Si', 'No']
+            }
         },
         'Lesiones': {
-            'Pólipo / Masa': {
-                'Morfología (París)': ['0-Is (Sésil)', '0-Ip (Pediculado)', '0-IIa (Elevado)', '0-IIc (Deprimido)', 'Masivo'],
-                'Superficie': ['Lisa', 'Granular', 'Vellosa', 'Ulcerada']
+            'Lesiones Planas': {
+                'Mucosa gástrica ectópica': {
+                    'Número': ['Única', 'Múltiples']
+                },
+                'Placa': {
+                    'Número': ['Única', 'Múltiples']
+                }
             },
-            'Úlcera': {
-                'Número': ['Única', 'Múltiple'],
-                'Fondo': ['Limpio', 'Fibrina', 'Sangrado activo'],
-                'Bordes': ['Regulares', 'Irregulares / Elevados']
+            'Lesiones Protruyentes': {
+                'Nódulo': {
+                    'Número': ['Única', 'Pocas', 'Muchas'],
+                    'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+                },
+                'Tumor / Masa': {
+                    'Tamaño': ['Pequeña', 'Mediana', 'Grande'],
+                    'Tipo': ['Submucoso', 'Vegetante', 'Ulcerado'],
+                    'Circunferencial': ['Si', 'No'],
+                    'Obstructivo': ['Parcial', 'Completa'],
+                    'Sangrante': ['Si', 'No'],
+                    'Estigmas de sangrado': ['Si', 'No']
+                }
             },
-            'Otros': ['Desgarro de Mallory-Weiss', 'Fístula', 'Hematoma']
-        }
+            'Lesiones Excavadas': {
+                'Síndrome Mallory-Weiss': {
+                    'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                    'Estigmas de sangrado': ['Si', 'No']
+                },
+                'Erosión': {
+                    'Número': ['Única', 'Pocas', 'Muchos']
+                },
+                'Ulcera': {
+                    'Tamaño (mm)': ['(especificar)'],
+                    'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                    'Estigmas de sangrado': ['Si', 'No']
+                }
+            }
+        },
+        'Otros': ['Cicatriz', 'Divertículo', 'Fístula']
     },
     'Estómago': {
-        'Lumen': {
-            'Forma': ['Remanente quirúrgico (Billroth I/II)', 'Deformidad por compresión', 'Normal'],
-            'Paredes': ['Insuflación adecuada', 'Poca distensibilidad', 'Linitis plástica?']
+        'Luz': {
+            'Normal': [],
+            'Estenosis': {
+                'Aspecto': ['Extrínseca', 'Benigna intrínseca', 'Maligna intrínseca'],
+                'Estenosis': ['Si', 'No']
+            },
+            'Deformación': [],
+            'Compresión Extrínseca': [],
+            'Evidencia de cirugía previa': {
+                'Anastomosis': ['Billroth I', 'Billroth II', 'Gastroenteroanastomosis', 'Piloroplastia', 'Cirugía antirreflujo', 'Gastroplastia anillada'],
+                'Material de sutura visible': ['Si', 'No']
+            },
+            'Gastrostomía': {
+                'Tipo': ['Quirúrgica', 'Endoscópica (GEP)']
+            }
         },
-        'Contenidos': {
-            'Tipo': ['Alimento (Gastroparesia)', 'Bilis (Reflujo)', 'Sangre (Fresh)', 'Posos de café', 'Normal'],
-            'Cuerpo Extraño': ['Bezoar', 'Otros']
+        'Contenido': {
+            'Sangre': {
+                'Aspecto de sangre': ['Roja', 'Coágulo', 'Hematina (sangre alterada)']
+            },
+            'Restos alimentarios': {
+                'Tipo': ['Normal', 'Bezoar (especificar)']
+            },
+            'Fluidos': {
+                'Aspecto': ['Claro', 'Excesivo', 'Bilioso']
+            },
+            'Cuerpo Extraño': {
+                'Tipo': ['(especificar)']
+            },
+            'Prótesis': {
+                'Tipo': ['(especificar)']
+            }
         },
         'Mucosa': {
-            'Gastritis / Eritema': ['Antral', 'Corporal', 'Pangastritis', 'Gastropatía Erosiva'],
-            'Atrofia / Metaplasia': ['Signos de atrofia (Vasos visibles)', 'Metaplasia intestinal (Placas)', 'Normal'],
-            'Várices Gástricas': ['GOV1', 'GOV2', 'IGV1', 'IGV2'],
-            'Otros': ['Hipertensión Portal', 'GAVE (Sandía)', 'Normal']
+            'Eritematosa (Hiperémica)': {
+                'Extensión': ['Localizada', 'Parcheada', 'A tiras', 'Difusa']
+            },
+            'Congestiva (Edematosa)': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Granular': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+            },
+            'Friable': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si: espontáneo', 'Si: al contacto', 'No']
+            },
+            'Nodular': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+            },
+            'Atrófica': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+            },
+            'Hemorrágica': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+            },
+            'Petequias': {
+                'Número': ['Única', 'Pocas', 'Múltiples']
+            }
         },
-        'Lesiones': {
-            'Úlcera Gástrica': {
+        'Lesiones Planas': {
+            'Mancha (área)': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Sangrado': ['Si', 'Subepitelial', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Lesión de Dieulafoy': {
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Angioectasia': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            }
+        },
+        'Lesiones Protruyentes': {
+            'Pliegues engrosados': {
+                'Extensión': ['Localizada', 'Difusa'],
+                'Tipo': ['Grueso', 'Gigante']
+            },
+            'Pápula (Nódulo)': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Sangrado': ['Si', 'No']
+            },
+            'Pólipo': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Pedículo': ['Sésil', 'Pediculado'],
+                'Tamaño': ['Pequeño (< 5 mm)', 'Mediano (5-20 mm)', 'Grande (> 20 mm)'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Tumor / Masa': {
+                'Tamaño': ['Pequeña', 'Mediana', 'Grande', 'Diámetro en mm (especificar)'],
+                'Tipo': ['Submucoso', 'Vegetante', 'Ulcerado', 'Infiltrante'],
+                'Circunferencial': ['Si', 'No'],
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Varices': {
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Granuloma por sutura': []
+        },
+        'Lesiones Excavadas': {
+            'Ulcera Gástrica': {
                 'Clasificación Forrest': ['Ia (Chorro)', 'Ib (Babeante)', 'IIa (Vaso visible)', 'IIb (Coágulo)', 'IIc (Mancha)', 'III (Base limpia)'],
-                'Localización': ['Curvatura Menor', 'Curvatura Mayor', 'Antro', 'Cuerpo', 'Fundus']
+                'Tamaño (mm)': ['(especificar)'],
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No']
             },
-            'Pólipo / Masa': {
-                'Tipo': ['Glándulas fúndicas', 'Hiperplásico', 'Adenoma', 'Submucoso (GIST?)'],
-                'Tamaño': ['< 10mm', '10-20mm', '> 20mm']
-            },
-            'Otros': ['Erosiones', 'Angiectasia', 'Lesión de Dieulafoy']
+            'Erosiones': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Fondo': ['Limpio', 'Hematina', 'Sangrado activo']
+            }
         }
     },
     'Duodeno': {

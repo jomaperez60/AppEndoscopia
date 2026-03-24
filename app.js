@@ -31,6 +31,7 @@ const state = {
         extension: 'Duodeno D2'
     },
     findings: [],
+    procedimientos: [],
     plan: '',
     users: JSON.parse(localStorage.getItem('endo_users') || '[{"username":"admin","password":"admin","role":"admin","avatar":"Dr"}]'),
     currentUser: JSON.parse(sessionStorage.getItem('endo_current_user') || 'null'),
@@ -712,24 +713,34 @@ function renderAttributeGroups(dataObj, container, level) {
 }
 
 function updateMstMultiSpec(level, groupKey, baseItem, value) {
-    const cleanItem = baseItem.replace('(especificar)', '').trim();
-    currentMstSelection[level].values[groupKey] = value.trim() ? `${cleanItem}: ${value}` : cleanItem;
+    if (baseItem.trim() === '(especificar)') {
+        currentMstSelection[level].values[groupKey] = value.trim() || baseItem;
+    } else {
+        const cleanItem = baseItem.replace('(especificar)', '').trim();
+        currentMstSelection[level].values[groupKey] = value.trim() ? `${cleanItem} ${value}` : baseItem;
+    }
 }
 
 function updateMstSpec(level, baseItem, value) {
-    const cleanItem = baseItem.replace('(especificar)', '').trim();
-    currentMstSelection[level] = value.trim() ? `${cleanItem}: ${value}` : cleanItem;
+    if (baseItem.trim() === '(especificar)') {
+        currentMstSelection[level] = value.trim() || baseItem;
+    } else {
+        const cleanItem = baseItem.replace('(especificar)', '').trim();
+        currentMstSelection[level] = value.trim() ? `${cleanItem} ${value}` : baseItem;
+    }
 }
 
 function saveFinding() {
-    const cleanMst = currentMstSelection.filter(item => item !== undefined && item !== null).map(item => {
+    const cleanMst = [];
+    currentMstSelection.forEach(item => {
+        if (item === undefined || item === null) return;
         if (typeof item === 'object' && item.__multi) {
-            const attributes = Object.entries(item.values)
-                .map(([k, v]) => `${k}: ${v}`)
-                .join(', ');
-            return attributes;
+            Object.entries(item.values).forEach(([k, v]) => {
+                if (v && v.trim()) cleanMst.push(`${k}: ${v}`);
+            });
+        } else if (item && item.trim()) {
+            cleanMst.push(item);
         }
-        return item;
     });
     
     if (cleanMst.length === 0) { alert("Debe seleccionar al menos un descriptor clínico"); return; }
@@ -737,6 +748,15 @@ function saveFinding() {
     const locationText = currentWgoLocation.length > 0 ? currentWgoLocation.join(' - ') : 'General';
     const findingText = cleanMst.join(' - ');
     
+    if (currentOrgan === 'Procedimientos') {
+        state.procedimientos.push({
+            description: (locationText !== 'General' ? `${locationText}: ` : '') + findingText
+        });
+        updateProcedimientosList();
+        closeMstModal();
+        return;
+    }
+
     state.findings.push({ 
         organ: currentOrgan, 
         location: locationText,
@@ -754,6 +774,41 @@ function saveFinding() {
 
     closeMstModal();
     updateFindingsList();
+}
+
+function updateProcedimientosList() {
+    const container = document.getElementById('procedimientos-container');
+    if (!container) return;
+
+    if (state.procedimientos.length === 0) {
+        container.innerHTML = '<p class="placeholder-text">No se han registrado procedimientos adicionales en este estudio.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+    state.procedimientos.forEach((proc, idx) => {
+        const div = document.createElement('div');
+        div.className = 'finding-item';
+        div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;';
+        
+        const content = document.createElement('div');
+        content.innerHTML = `<span style="color: var(--primary); font-weight: 600; margin-right: 10px;">PRO:</span> <span>${proc.description}</span>`;
+        
+        const btn = document.createElement('button');
+        btn.className = 'btn-icon';
+        btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        btn.style.color = 'var(--danger)';
+        btn.onclick = () => deleteProcedimiento(idx);
+        
+        div.appendChild(content);
+        div.appendChild(btn);
+        container.appendChild(div);
+    });
+}
+
+function deleteProcedimiento(index) {
+    state.procedimientos.splice(index, 1);
+    updateProcedimientosList();
 }
 
 function closeMstModal() { document.getElementById('mst-modal').classList.remove('active'); }
@@ -1326,7 +1381,11 @@ function cleanMstString(str) {
         'Grado', 'Tamaño', 'Sangrado', 'Estigmas de sangrado', 'Estigmas',
         'Circunferencial', 'Obstructivo', 'Pedículo', 'Fondo',
         'Clasificación', 'Atributos Generales', 'morfología', 'distensibilidad',
-        'cm desde incisivos'
+        'cm desde incisivos', 'Sobrepasable', 'Material de sutura visible', 
+        'Material pigmentado', 'Forma', 'Orificio', 'Instrumento', 'Método', 
+        'Espécimen', 'Resultado', 'Recuperación del pólipo', 'Precorte', 
+        'Forma extracción', 'Material inyectado', 'Volumen', 'Motivo', 
+        'Longitud', 'Diámetro', 'Número', 'Lugar(es)', 'Diagnósticos', 'Terapéuticos'
     ];
 
     for (let i = 0; i < components.length; i++) {
@@ -1405,6 +1464,8 @@ function formatClinicalNarrative(organ, findings) {
                 return "Estómago con lago gástrico de contenido claro y cantidad habitual. Morfología y distensibilidad conservadas a la insuflación. Pliegues gástricos de trayecto y grosor normal. Mucosa de fondo, cuerpo y antro de características endoscópicas normales. Píloro céntrico, circular y franqueable.";
             case 'Duodeno':
                 return "Bulbo duodenal y segunda porción duodenal de morfología normal. Mucosa íntegra, de aspecto aterciopelado sin evidencia de soluciones de continuidad ni lesiones protruyentes.";
+            case 'Yeyuno':
+                return "Segmentos de yeyuno explorados sin evidencia de alteraciones. Morfología, distensibilidad y mucosa de características endoscópicas normales.";
             case 'Exploración':
                 return "Procedimiento realizado sin complicaciones técnicas. Extensión del examen satisfactoria según el objetivo clínico. Preparación de la mucosa adecuada que permite una valoración diagnóstica óptima.";
             default:
@@ -1418,6 +1479,7 @@ function formatClinicalNarrative(organ, findings) {
         case 'Esófago': intro = "Esófago con distensibilidad conservada, sin embargo, "; break;
         case 'Estómago': intro = "Estómago con lago mucoso de características normales. Durante la exploración "; break;
         case 'Duodeno': intro = "Duodeno explorado bajo visión directa; "; break;
+        case 'Yeyuno': intro = "Yeyuno explorado mediante visión luminal; "; break;
         case 'Exploración': intro = "En cuanto a los límites y condiciones del estudio, "; break;
     }
 
@@ -1439,6 +1501,126 @@ function formatClinicalNarrative(organ, findings) {
     
     // Final polish: remove double spaces and fix capitalization
     combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.');
+    return combined.charAt(0).toUpperCase() + combined.slice(1);
+}
+
+function formatProceduresNarrative(procedimientos) {
+    if (!procedimientos || procedimientos.length === 0) return "";
+    
+    const sentences = procedimientos.map(p => {
+        let fullDesc = p.description;
+        let organLoc = "";
+        
+        if (fullDesc.includes(': ')) {
+            const parts = fullDesc.split(': ');
+            organLoc = parts[0].trim();
+            fullDesc = parts.slice(1).join(': ').trim();
+        }
+        
+        // Remove structural labels and internal separators
+        let items = fullDesc.split(' - ').map(s => s.trim()).filter(s => {
+            const sl = s.toLowerCase();
+            return sl !== 'diagnósticos' && sl !== 'terapéuticos';
+        });
+
+        if (items.length === 0) return null;
+
+        let procName = items[0];
+        let attributes = items.slice(1);
+        
+        let subLoc = "";
+        let details = [];
+        let result = "";
+
+        attributes.forEach(attr => {
+            if (attr.includes(':')) {
+                let [label, value] = attr.split(':').map(s => s.trim());
+                let l = label.toLowerCase();
+                let v = value.toLowerCase();
+                
+                if (v === '' || v === '(especificar)') return; // Skip empty/placeholder values
+
+                if (l === 'lugar(es)') subLoc = value;
+                else if (l === 'resultado') result = value;
+                else if (l === 'espécimen') details.push('para ' + v);
+                else if (l === 'método' || l === 'instrumento' || l === 'tipo' || l === 'colorante') details.push(v);
+                else if (v !== 'no' && v !== 'si') details.push(`${l} ${v}`);
+                else if (v === 'si') details.push(l);
+            } else {
+                let v = attr.trim();
+                let vL = v.toLowerCase();
+                if (v && vL !== '(especificar)' && vL !== 'sí' && vL !== 'no') details.push(vL);
+            }
+        });
+
+        let sentence = "";
+        const nameL = procName.toLowerCase();
+        if (nameL.includes('gastrostomía')) {
+            sentence = "se colocó sonda de gastrostomía percutánea";
+        } else if (nameL.includes('biopsia')) {
+            sentence = "se realizó biopsia";
+        } else if (nameL.includes('polipectomia')) {
+            sentence = "se realizó polipectomía";
+        } else if (nameL.includes('dilatación')) {
+            sentence = "se realizó dilatación";
+        } else if (nameL.includes('ligadura')) {
+            sentence = "se realizó ligadura";
+        } else if (nameL.includes('inyección')) {
+            sentence = "se realizó inyección";
+        } else {
+            sentence = `se realizó ${nameL}`;
+        }
+
+        if (subLoc && subLoc.toLowerCase() !== '(especificar)') {
+            sentence += ` en ${subLoc}`;
+        }
+        
+        let validDetails = details.filter(d => {
+            if (!d || d.trim().length === 0) return false;
+            // Deduplicate: if the detail is already in the sentence (e.g. 'percutánea'), skip it
+            if (sentence.toLowerCase().includes(d.toLowerCase())) return false;
+            return true;
+        });
+
+        // Better wording for common phrases
+        validDetails = validDetails.map(d => {
+            if (d.startsWith('forma extracción ')) return d.replace('forma extracción ', 'de extracción ');
+            return d;
+        });
+
+        if (validDetails.length > 0) {
+            sentence += ` con ${validDetails.join(' ')}`;
+        }
+
+        if (result && result.toLowerCase() !== '(especificar)') {
+            let rL = result.toLowerCase();
+            if (rL.includes('satisfactorio') || rL.includes('satisfactoria')) {
+                sentence += ` de manera satisfactoria`;
+            } else {
+                sentence += ` con resultado ${rL}`;
+            }
+        }
+
+        if (organLoc && organLoc !== 'General') {
+            return `en ${organLoc.toLowerCase()} ${sentence}`;
+        }
+        return sentence;
+    }).filter(s => s !== null);
+
+    if (sentences.length === 0) return "";
+    
+    let narrative = "";
+    if (sentences.length === 1) {
+        narrative = sentences[0];
+    } else if (sentences.length === 2) {
+        narrative = sentences.join(" y ");
+    } else {
+        const last = sentences.pop();
+        narrative = sentences.join(", ") + " y " + last;
+    }
+    
+    let combined = "Durante la endoscopia " + narrative + ".";
+    combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.').replace(/ ,/g, ',');
     return combined.charAt(0).toUpperCase() + combined.slice(1);
 }
 
@@ -1511,6 +1693,13 @@ function generateReport(skipSave = false) {
                 <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">HALLAZGOS MACROSCÓPICOS</div>
                 <div style="padding-left: 5px;">${findingsHtml}</div>
             </div>
+
+            ${state.procedimientos.length > 0 ? `
+            <div style="margin-bottom: 30px;">
+                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">PROCEDIMIENTOS REALIZADOS</div>
+                <div style="color: #333; text-align: justify; padding-left: 11px;">${formatProceduresNarrative(state.procedimientos)}</div>
+            </div>
+            ` : ''}
 
             <div style="margin-bottom: 35px;">
                 <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">CONCLUSIONES Y DIAGNÓSTICO</div>
@@ -1636,6 +1825,7 @@ function saveToHistory() {
         diagnoses: document.getElementById('diag-final').value,
         plan: state.plan,
         findings: [ ...state.findings ],
+        procedimientos: [ ...state.procedimientos ],
         images: [ ...state.images ] // Persist images too!
     };
 
@@ -1651,6 +1841,7 @@ function saveToHistory() {
 
     localStorage.setItem('endo_history', JSON.stringify(state.history));
     renderHistory();
+    alert("Estudio guardado correctamente en el historial.");
 }
 
 function renderHistory(filter = "") {
@@ -1697,83 +1888,6 @@ function viewHistoryDetail(id) {
     }
 }
 
-function loadFromHistory(id, silent = false) {
-    const record = state.history.find(r => String(r.id) === String(id));
-    if(!record) {
-        alert("No se encontró el registro seleccionado.");
-        return;
-    }
-
-    if(!silent) {
-        if(state.currentUser.role !== 'admin') {
-            alert("Solo los administradores pueden editar estudios guardados.");
-            return;
-        }
-        if(!confirm("¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
-    }
-
-    try {
-        // 1. Restore State (Object shallow copies)
-        state.patient = Object.assign({}, record.patient);
-        state.clinical = Object.assign({}, record.clinical);
-        state.metadata = Object.assign({}, record.metadata);
-        state.quality = Object.assign({}, record.quality);
-        state.findings = Array.from(record.findings || []);
-        state.images = Array.from(record.images || []);
-        state.plan = record.plan || '';
-
-        // 2. Sync DOM Elements
-        // Simple inputs
-        const fieldMap = {
-            'paciente-nombre': state.patient.nombre,
-            'paciente-dni': state.patient.dni,
-            'paciente-fnacimiento': state.patient.fnacimiento,
-            'paciente-sexo': state.patient.sexo,
-            'paciente-antecedentes': state.patient.antecedentes,
-            'clinico-referente': state.clinical.referente,
-            'clinico-asa': state.clinical.asa,
-            'clinico-anticoagulante': state.clinical.anticoagulante,
-            'clinico-preparacion': state.clinical.preparacion,
-            'indicacion': state.metadata.indicacion,
-            'sedacion': state.metadata.sedacion,
-            'instrumento': state.metadata.instrumento,
-            'extension': state.metadata.extension,
-            'calidad-consentimiento': state.quality.consentimiento,
-            'calidad-fotos': state.quality.fotos,
-            'calidad-completa': state.quality.completa,
-            'calidad-tiempo': state.quality.tiempo,
-            'diag-final': record.diagnoses || ''
-        };
-
-        Object.keys(fieldMap).forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.value = fieldMap[id] || '';
-        });
-
-        // 3. Special handling for address (if it exists)
-        if (state.patient.departamento) {
-            const deptoEl = document.getElementById('paciente-departamento');
-            if (deptoEl) {
-                deptoEl.value = state.patient.departamento;
-                deptoEl.dispatchEvent(new Event('change')); // Trigger municipio filter
-                setTimeout(() => {
-                    const muniEl = document.getElementById('paciente-municipio');
-                    if (muniEl) muniEl.value = state.patient.municipio;
-                }, 50);
-            }
-        }
-
-        // 4. Render dependent UI
-        renderGallery();
-        updateFindingsList();
-        updateTopbar();
-
-        if(!silent) switchMainView('new');
-
-    } catch (e) {
-        console.error("Error syncing UI from record:", e);
-    }
-}
 
 function loadFromHistory(id, silent = false) {
     const record = state.history.find(r => String(r.id) === String(id));
@@ -1798,6 +1912,7 @@ function loadFromHistory(id, silent = false) {
         state.metadata = JSON.parse(JSON.stringify(record.metadata));
         state.quality = JSON.parse(JSON.stringify(record.quality));
         state.findings = JSON.parse(JSON.stringify(record.findings || []));
+        state.procedimientos = JSON.parse(JSON.stringify(record.procedimientos || []));
         state.images = JSON.parse(JSON.stringify(record.images || []));
         state.plan = record.plan || '';
 
@@ -1843,6 +1958,7 @@ function loadFromHistory(id, silent = false) {
         // 3. Update Visuals
         updateTopbar();
         updateFindingsList();
+        updateProcedimientosList();
         renderGallery();
         
         if(!silent) switchMainView('new');
@@ -1862,6 +1978,7 @@ function resetForm() {
     state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', instrumento: 'Olympus', extension: 'Duodeno D2' };
     state.quality = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos' };
     state.findings = [];
+    state.procedimientos = [];
     state.images = [];
     state.plan = '';
     state.selectedImageIndex = null;
@@ -1884,6 +2001,7 @@ function resetForm() {
 
     updateTopbar();
     updateFindingsList();
+    updateProcedimientosList();
     renderGallery();
     switchMainView('new');
 }
@@ -1913,7 +2031,7 @@ function clearHistory() {
 
 function exportToCSV() {
     if(state.history.length === 0) { alert("No hay datos para exportar."); return; }
-    const headers = ["ID", "Fecha", "Nombre", "DNI", "Edad", "Sexo", "Procedencia", "ASA", "Indicación", "Conclusión"];
+    const headers = ["ID", "Fecha", "Nombre", "DNI", "Edad", "Sexo", "Procedencia", "ASA", "Indicación", "Procedimientos", "Conclusión"];
     const rows = state.history.map(r => [
         r.id, 
         r.date, 
@@ -1924,6 +2042,7 @@ function exportToCSV() {
         `${r.patient.municipio || ''}, ${r.patient.departamento || ''}`,
         r.clinical.asa, 
         r.metadata.indicacion, 
+        (r.procedimientos || []).map(p => p.description).join(" | "),
         (r.diagnoses || "").replace(/\n/g, " ")
     ]);
     let csv = "\uFEFF" + headers.join(";") + "\n";

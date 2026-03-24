@@ -237,22 +237,202 @@ const mstTree = {
         }
     },
     'Duodeno': {
-        'Lumen': ['Bulbo deformado (Secuela)', 'Estenosis post-bulbar', 'Divertículo peripapilar', 'Normal'],
-        'Mucosa': {
-            'Inflamación': ['Bulbitis erosiva', 'Duodenitis inespecífica'],
-            'Atrofia': ['Sospecha de Celiaquía (Scalloping)', 'Mosaico / Patrón nodular', 'Vellosidades normales'],
-            'Otros': ['Sangrado activo / reciente', 'Normal']
+        'Normal': [],
+        'Luz': {
+            'Estenosis': {
+                'Aspecto': ['Extrínseca', 'Benigna intrínseca', 'Maligna intrínseca'],
+                'Sobrepasable': ['Si', 'No']
+            },
+            'Deformidad': {
+                'Aspecto': ['Extrínseco', 'Post-Ulcerosa']
+            },
+            'Evidencia de cirugía previa': {
+                'Detalle': ['(especificar)'],
+                'Material de sutura visible': ['Si', 'No']
+            }
         },
-        'Lesiones': {
-            'Úlcera Duodenal': ['Frente anterior', 'Frente posterior', 'Apex', 'Beso (Kissing)'],
-            'Pólipo / Masa': ['Adenoma periampular', 'Brunneroma', 'Normal'],
-            'Papila': ['Normal', 'Prominente', 'Periampular']
+        'Contenido': {
+            'Sangre': {
+                'Aspecto': ['Roja', 'Coágulo', 'Hematina (sangre alterada)']
+            },
+            'Parásitos': ['(especificar)'],
+            'Cuerpo Extraño': ['(especificar)'],
+            'Prótesis': {
+                'Tipo': ['(especificar)']
+            }
+        },
+        'Mucosa': {
+            'Eritematosa (Hiperémica)': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Congestiva (Edematosa)': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            },
+            'Granular': { 'Extensión': ['Localizada', 'Parcheada', 'Difusa'] },
+            'Friable': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si: Espontáneo', 'Si: Sangrado al contacto', 'No']
+            },
+            'Nodular': { 'Extensión': ['Localizada', 'Difusa'] },
+            'Atrófica': { 'Extensión': ['Localizada', 'Parcheada', 'Difusa'] },
+            'Hemorrágica': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            }
+        },
+        'Lesiones Planas': {
+            'Mancha (área)': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Aspecto': ['Subepitelial', 'Teñido de Hematina (Sangre alterada)']
+            },
+            'Angioectasia': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusas'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            }
+        },
+        'Lesiones Protruyentes': {
+            'Pólipo(s)': {
+                'Número': ['Único', 'Pocos', 'Múltiples'],
+                'Tamaño': ['Pequeño (< 5 mm)', 'Mediano (5-20 mm)', 'Grande (> 20 mm)'],
+                'Pedículo': ['Sésil', 'Pediculado'],
+                'Sangrado': ['Si', 'No']
+            },
+            'Tumor/Masa': {
+                'Tamaño': ['Pequeño', 'Mediano', 'Grande', '(especificar diámetro mayor en mm)'],
+                'Tipo': ['Submucoso', 'Vegetante', 'Ulcerado', 'Infiltrante', 'Velloso'],
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            }
+        },
+        'Lesiones Excavadas': {
+            'Erosión': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Extensión': ['Localizada', 'Segmentarias', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            },
+            'Ulcera': {
+                'Número': ['(especificar)'],
+                'Tamaño': ['(especificar diámetro mayor en mm)'],
+                'Forma': ['Superficial', 'Crateriforme', 'Lineal'],
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Vaso visible', 'Coágulo', 'No estigmas'],
+                'Material pigmentado': ['Si', 'No']
+            }
+        },
+        'Otros': {
+            'Cicatriz': { 'Número': ['Única', 'Múltiples'] },
+            'Divertículo': { 'Orificio': ['Grande', 'Pequeño'] },
+            'Fístula': ['(especificar)']
         }
     },
     'Yeyuno': {
-        'Lumen': ['Normal', 'Estenosis', 'Divertículo', 'Sangre'],
-        'Mucosa': ['Normal', 'Eritema', 'Atrofia (Celiaquía?)', 'Nodularidad'],
-        'Lesiones': ['Pólipo', 'Úlcera', 'Angiectasia']
+        'Normal': [],
+        'Luz': {
+            'Estenosis': {
+                'Aspecto': ['Extrínseca', 'Benigna intrínseca', 'Maligna intrínseca'],
+                'Sobrepasable': ['Si', 'No']
+            },
+            'Deformidad': {
+                'Aspecto': ['Extrínseco', 'Post-Ulcerosa']
+            },
+            'Evidencia de cirugía previa': {
+                'Detalle': ['(especificar)'],
+                'Material de sutura visible': ['Si', 'No']
+            }
+        },
+        'Contenido': {
+            'Sangre': {
+                'Aspecto': ['Roja', 'Coágulo', 'Hematina (sangre alterada)']
+            },
+            'Parásitos': ['(especificar)'],
+            'Cuerpo Extraño': ['(especificar)'],
+            'Prótesis': {
+                'Tipo': ['(especificar)']
+            }
+        },
+        'Mucosa': {
+            'Eritematosa (Hiperémica)': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            },
+            'Congestiva (Edematosa)': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            },
+            'Granular': { 'Extensión': ['Localizada', 'Parcheada', 'Difusa'] },
+            'Friable': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si: Espontáneo', 'Si: Sangrado al contacto', 'No']
+            },
+            'Nodular': { 'Extensión': ['Localizada', 'Difusa'] },
+            'Atrófica': { 'Extensión': ['Localizada', 'Parcheada', 'Difusa'] },
+            'Hemorrágica': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            }
+        },
+        'Lesiones Planas': {
+            'Mancha (área)': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Aspecto': ['Subepitelial', 'Teñido de Hematina (Sangre alterada)']
+            },
+            'Angioectasia': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusas'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            }
+        },
+        'Lesiones Protruyentes': {
+            'Pólipo(s)': {
+                'Número': ['Único', 'Pocos', 'Múltiples'],
+                'Tamaño': ['Pequeño (< 5 mm)', 'Mediano (5-20 mm)', 'Grande (> 20 mm)'],
+                'Pedículo': ['Sésil', 'Pediculado'],
+                'Sangrado': ['Si', 'No']
+            },
+            'Tumor/Masa': {
+                'Tamaño': ['Pequeño', 'Mediano', 'Grande', '(especificar diámetro mayor en mm)'],
+                'Tipo': ['Submucoso', 'Vegetante', 'Ulcerado', 'Infiltrante', 'Velloso'],
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Si', 'No']
+            }
+        },
+        'Lesiones Excavadas': {
+            'Erosión': {
+                'Número': ['Única', 'Pocas', 'Múltiples'],
+                'Extensión': ['Localizada', 'Segmentarias', 'Difusa'],
+                'Sangrado': ['Si', 'No'],
+                'Estigmas': ['Si', 'No']
+            },
+            'Ulcera': {
+                'Número': ['(especificar)'],
+                'Tamaño': ['(especificar diámetro mayor en mm)'],
+                'Forma': ['Superficial', 'Crateriforme', 'Lineal'],
+                'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
+                'Estigmas de sangrado': ['Vaso visible', 'Coágulo', 'No estigmas'],
+                'Material pigmentado': ['Si', 'No']
+            }
+        },
+        'Otros': {
+            'Cicatriz': { 'Número': ['Única', 'Múltiples'] },
+            'Divertículo': { 'Orificio': ['Grande', 'Pequeño'] },
+            'Fístula': ['(especificar)']
+        }
     },
     'Exploración': {
         'Preparación': {
@@ -276,6 +456,106 @@ const mstTree = {
                 'Problemas técnicos', 
                 'Otro (especificar)'
             ]
+        }
+    },
+    'Procedimientos': {
+        'Diagnósticos': {
+            'Biopsia': {
+                'Lugar(es)': ['(especificar)'],
+                'Instrumento': ['Pinza', 'Asa'],
+                'Método': ['Fría', 'Caliente'],
+                'Espécimen': ['Histología', 'Microbiología', 'Test Helicobacter pylori']
+            },
+            'Citología': { 
+                'Lugar(es)': ['(especificar)'],
+                'Lesión': ['(especificar)'] 
+            },
+            'Cromoscopia': {
+                'Lugar(es)': ['(especificar)'],
+                'Tipo': ['Tinción por spray', 'Tinción'],
+                'Colorante': ['(especificar)']
+            },
+            'Aspirado de líquidos': [],
+            'Fluoroscopia': { 'Tipo': ['(especificar)'] },
+            'Colangioscopia': { 'Tipo': ['(especificar)'] },
+            'Ultrasonografía endoscópica': { 'Tipo': ['(especificar)'] },
+            'Extracción de cuerpo extraño': { 'Tipo': ['(especificar)'] },
+            'Polipectomia': {
+                'Lugar(es)': ['(especificar)'],
+                'Instrumento': ['Pinza', 'Asa'],
+                'Método': ['Fría', 'Caliente'],
+                'Resultado': ['Completa', 'Incompleta'],
+                'Recuperación del pólipo': ['Recuperado', 'No recuperado']
+            }
+        },
+        'Terapéuticos': {
+            'Esfinterotomía': {
+                'Precorte': ['Si', 'No'],
+                'Resultado': ['Satisfactoria', 'Insatisfactoria']
+            },
+            'Extracción de cálculos': {
+                'Resultado': ['Completa', 'Incompleta', 'Insatisfactoria']
+            },
+            'Litotripsia': {
+                'Tipo': ['(especificar)'],
+                'Resultado': ['Satisfactoria', 'Insatisfactoria']
+            },
+            'Quistostomia': {
+                'Tipo': ['Transgástrica', 'Transduodenal']
+            },
+            'Colocación de hilo-guía': {
+                'Tipo': ['(especificar)'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Colocación de drenaje o sonda': {
+                'Tipo': ['Nasobiliar', 'Nasoquístico', 'Nasoentérico', 'Nasopancreático']
+            },
+            'Prótesis': {
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Gastrostomía (PEG)': {
+                'Tipo': ['(especificar)'],
+                'Forma extracción': ['Externa', 'Interna'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Dilatación': {
+                'Lugar(es)': ['(especificar)'],
+                'Tipo': ['Bujías con guía', 'Bujías sin guía', 'Balón'],
+                'Tamaño (French/gauge)': ['(especificar)'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Inyección': {
+                'Lugar(es)': ['(especificar)'],
+                'Lesión': ['(especificar)'],
+                'Material inyectado': ['(especificar)'],
+                'Volumen': ['(especificar)'],
+                'Motivo': ['Hemostasia', 'Erradicación de varices', 'Destrucción tumoral', 'Depósito de fármacos'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Ligaduras': {
+                'Lugar(es)': ['(especificar)'],
+                'Tipo': ['(especificar)'],
+                'Número': ['(especificar)'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Colocación prótesis': {
+                'Lugar(es)': ['(especificar)'],
+                'Tipo': ['(especificar)'],
+                'Longitud': ['(especificar)'],
+                'Diámetro': ['(especificar)'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Resección mucosa': {
+                'Lugar(es)': ['(especificar)'],
+                'Tipo': ['(especificar)'],
+                'Lesión': ['(especificar)'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            },
+            'Terapéutica Térmica': {
+                'Tipo': ['Coagulación', 'Vaporización', 'Eléctrico monopolar', 'Eléctrico bipolar', 'Láser', 'Argón beam'],
+                'Motivo': ['Hemostasia', 'Destrucción tisular', 'Destrucción tumoral'],
+                'Resultado': ['Satisfactorio', 'Insatisfactorio']
+            }
         }
     }
 };
@@ -321,6 +601,13 @@ const wgoLocations = {
         'Duodeno',
         'Yeyuno',
         'Anastomosis'
+    ],
+    'Procedimientos': [
+        'Esófago',
+        'Estómago',
+        'Duodeno',
+        'Yeyuno',
+        'General'
     ]
 };
 

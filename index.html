@@ -76,7 +76,7 @@
                     </div>
                     
                     <div class="actions" id="topbar-actions">
-                        <button class="btn btn-secondary" onclick="saveToHistory()"><i class="fa-solid fa-save"></i> Guardar Borrador</button>
+                        <button class="btn btn-secondary" onclick="saveToHistory()"><i class="fa-solid fa-save"></i> Guardar</button>
                         <button class="btn btn-primary" onclick="generateReport()"><i class="fa-solid fa-file-pdf"></i> Generar Reporte</button>
                     </div>
                     
@@ -92,9 +92,10 @@
                     <div class="tabs">
                         <button class="tab active" data-target="metadata">1. Paciente y Procedimiento</button>
                         <button class="tab" data-target="findings">2. Hallazgos Anatómicos</button>
-                        <button class="tab" data-target="diagnoses">3. Conclusión</button>
-                        <button class="tab" data-target="quality">4. Indicadores de Calidad</button>
-                        <button class="tab" data-target="images-tab">5. Registro de Imágenes</button>
+                        <button class="tab" data-target="procedimientos-tab">3. Procedimientos</button>
+                        <button class="tab" data-target="diagnoses">4. Conclusión</button>
+                        <button class="tab" data-target="quality">5. Indicadores de Calidad</button>
+                        <button class="tab" data-target="images-tab">6. Registro de Imágenes</button>
                     </div>
 
                     <div class="tab-content active" id="metadata">
@@ -314,6 +315,20 @@
                         </div>
                         <div id="findings-container" class="findings-list">
                             <p class="placeholder-text">Seleccione un órgano para registrar hallazgos estructurados</p>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="procedimientos-tab" style="display: none;">
+                        <div class="card">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin:0;"><i class="fa-solid fa-microscope"></i> Diagnosticos Adicionales y Procedimientos</h3>
+                                <button class="btn btn-primary" onclick="openFindings('Procedimientos')">
+                                    <i class="fa-solid fa-plus-circle"></i> Agregar Procedimiento
+                                </button>
+                            </div>
+                            <div id="procedimientos-container" class="findings-list">
+                                <p class="placeholder-text">No se han registrado procedimientos adicionales en este estudio.</p>
+                            </div>
                         </div>
                     </div>
 

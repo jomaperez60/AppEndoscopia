@@ -130,19 +130,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    updateTopbar();
+    // Mobile Menu Toggle
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const sideNav = document.querySelector('.sidebar nav');
+    if(mobileMenuToggle && sideNav) {
+        mobileMenuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sideNav.classList.toggle('active');
+            const icon = mobileMenuToggle.querySelector('i');
+            if(sideNav.classList.contains('active')) {
+                icon.classList.replace('fa-bars', 'fa-times');
+            } else {
+                icon.classList.replace('fa-times', 'fa-bars');
+            }
+        });
 
-    const planEl = document.getElementById('plan');
-    if(planEl) planEl.addEventListener('input', (e) => state.plan = e.target.value);
-
-    // Image Tagging System - Listeners for interactive diagram
-    const tagOverlay = document.getElementById('tag-overlay');
-    if(tagOverlay) {
-        tagOverlay.addEventListener('click', handleDiagramClick);
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (sideNav.classList.contains('active') && !sideNav.contains(e.target) && e.target !== mobileMenuToggle) {
+                sideNav.classList.remove('active');
+                mobileMenuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
+            }
+        });
+        
+        // Close menu when clicking a nav item
+        sideNav.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                sideNav.classList.remove('active');
+                mobileMenuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
+            });
+        });
     }
-});
 
-// --- View Switching Logic ---
+    updateTopbar();
+});
 
 function switchMainView(view) {
     const newView = document.getElementById('dynamic-view');

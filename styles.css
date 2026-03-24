@@ -21,13 +21,23 @@ body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     font-family: var(--font-sans);
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
-#app-container { display: flex; height: 100vh; }
+#app-container { 
+    display: flex; 
+    min-height: 100vh; 
+}
 
-.sidebar { width: 260px; background-color: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.sidebar { 
+    width: 260px; 
+    background-color: var(--bg-card); 
+    border-right: 1px solid var(--border); 
+    display: flex; 
+    flex-direction: column; 
+    transition: all 0.3s ease;
+}
 .logo { padding: 24px; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 12px; color: var(--primary); border-bottom: 1px solid var(--border); }
 .sidebar nav { padding: 16px 0; flex: 1; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; color: var(--text-muted); text-decoration: none; font-weight: 500; transition: all 0.2s ease; }
@@ -38,10 +48,30 @@ body {
 .info .name { display: block; font-weight: 600; font-size: 0.9rem; }
 .info .role { display: block; font-size: 0.8rem; color: var(--text-muted); }
 
-.main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-.topbar { padding: 20px 32px; background-color: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.patient-banner h2 { font-size: 1.5rem; margin-bottom: 4px; font-weight: 600; }
-.patient-info .tag { font-size: 0.85rem; color: var(--text-muted); margin-right: 12px; }
+.main-content { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    min-width: 0;
+}
+.topbar { 
+    padding: 16px 24px; 
+    background-color: var(--bg-card); 
+    border-bottom: 1px solid var(--border); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.patient-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.patient-banner h2 { font-size: 1.25rem; margin-bottom: 0; font-weight: 600; }
+.patient-info { display: flex; flex-wrap: wrap; gap: 8px; }
+.patient-info .tag { font-size: 0.8rem; color: var(--text-muted); margin-right: 0; }
 .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 8px; }
 .badge.info { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.5); }
 
@@ -51,11 +81,50 @@ body {
 .btn-secondary { background-color: var(--secondary); color: var(--text-main); }
 .btn-secondary:hover { background-color: var(--secondary-hover); }
 .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-main); }
-.btn-outline:hover { background-color: var(--secondary); border-color: var(--text-muted); }
+.btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: none;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+.btn-icon:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
 
-.content-body { padding: 32px; max-width: 1200px; margin: 0 auto; width: 100%; }
-.tabs { display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
-.tab { background: none; border: none; color: var(--text-muted); padding: 12px 16px; font-size: 1rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.content-body { 
+    padding: 24px; 
+    max-width: 1400px; 
+    margin: 0 auto; 
+    width: 100%; 
+}
+.tabs { 
+    display: flex; 
+    gap: 8px; 
+    margin-bottom: 24px; 
+    border-bottom: 1px solid var(--border); 
+    padding-bottom: 2px; 
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab { 
+    background: none; 
+    border: none; 
+    color: var(--text-muted); 
+    padding: 12px 12px; 
+    font-size: 0.9rem; 
+    font-weight: 500; 
+    cursor: pointer; 
+    border-bottom: 2px solid transparent; 
+    transition: all 0.2s; 
+    white-space: nowrap;
+}
 .tab:hover { color: var(--text-main); }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
@@ -112,8 +181,25 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
 .mst-btn:hover { border-color: var(--primary); }
 .mst-btn.selected { background-color: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: #60a5fa; font-weight: 500; }
 
+.image-workspace { 
+    display: flex; 
+    gap: 20px; 
+    height: auto; 
+    min-height: 600px;
+}
+
+#gi-diagram-container { 
+    position: relative; 
+    width: 100%; 
+    height: 100%; 
+    padding: 5px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .diagram-panel {
-    width: 400px;
+    flex: 1;
+    min-width: 300px;
     background: white;
     border-radius: var(--radius-md);
     position: relative;
@@ -123,8 +209,6 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
     border: 2px solid var(--border);
     overflow: hidden;
 }
-
-#gi-diagram-container { position: relative; width: 100%; height: 100%; padding: 5px; }
 #gi-diagram-img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .finding-item { padding: 12px 16px; background-color: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 .finding-item .body p { font-size: 0.95rem; font-weight: 500; }
@@ -141,7 +225,6 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Image Workspace Styles (Workstation Mode) */
-.image-workspace { height: 600px; }
 
 .img-tile {
     background: var(--bg-dark);
@@ -232,4 +315,65 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
     font-weight: 900;
     font-size: 14px;
     pointer-events: none;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    .sidebar { width: 220px; }
+    .image-workspace { height: auto; }
+    .diagram-panel { width: 100%; max-width: 500px; height: 500px; }
+}
+
+@media (max-width: 768px) {
+    #app-container { flex-direction: column; }
+    #mobile-menu-toggle { display: block; }
+    .sidebar { 
+        width: 100%; 
+        height: auto; 
+        border-right: none; 
+        border-bottom: 1px solid var(--border); 
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+    .logo { border-bottom: none; padding: 12px 20px; }
+    .sidebar nav { 
+        display: none; /* In a real app, I'd add a toggle, but for now let's simplify */
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        background: var(--bg-card);
+        z-index: 100;
+        border-bottom: 1px solid var(--border);
+    }
+    .sidebar nav.active { display: block; }
+    .user-profile { border-top: none; padding: 12px 20px; }
+    .user-profile .info { display: none; }
+    
+    .topbar { padding: 15px 20px; }
+    .content-body { padding: 15px; }
+    
+    .form-grid { grid-template-columns: 1fr; gap: 15px; }
+    
+    .image-workspace { flex-direction: column; height: auto; }
+    .gallery-grid { height: 400px; }
+    .labels-sidebar { width: 100% !important; flex-direction: row !important; flex-wrap: wrap; gap: 8px; }
+    .labels-sidebar button { flex: 1; min-width: 100px; }
+    .labels-sidebar input { flex: 1; min-width: 150px; }
+    
+    .diagram-panel { width: 100%; height: 400px; margin-top: 15px; }
+    
+    .modal-content { width: 95%; max-height: 95vh; }
+    .report-modal-content { width: 95%; }
+    .btn { width: 100%; justify-content: center; }
+    .actions { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+}
+
+@media (min-width: 1600px) {
+    .content-body { max-width: 1500px; }
+    .form-grid { grid-template-columns: repeat(4, 1fr); }
 }

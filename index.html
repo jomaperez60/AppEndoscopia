@@ -205,13 +205,11 @@
                                     </select>
                                 </div>
                                 <div class="input-group">
-                                    <label>Extensión del Examen</label>
-                                    <select id="extension">
-                                        <option value="Duodeno D2">Segunda porción duodenal</option>
-                                        <option value="Bulbo Duodenal">Bulbo duodenal</option>
-                                        <option value="Estómago">Estómago</option>
-                                        <option value="Esófago">Esófago</option>
-                                    </select>
+                                    <label>Extensión del Examen / Límites</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="extension" placeholder="Seleccione o escriba..." style="flex: 1;">
+                                        <button class="btn btn-secondary" onclick="openFindings('Exploración')" style="padding: 0 12px;"><i class="fa-solid fa-list-ul"></i></button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -626,12 +624,6 @@
                                 <button class="btn btn-primary" onclick="saveDiagnoses()">Aceptar Selección</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-outline" onclick="closeIndications()">Cancelar</button>
-                        <button class="btn btn-primary" onclick="saveIndication()">Aceptar Selección</button>
                     </div>
                 </div>
             </div>

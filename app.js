@@ -742,6 +742,16 @@ function saveFinding() {
         location: locationText,
         description: findingText 
     });
+
+    if (currentOrgan === 'Exploración') {
+        const input = document.getElementById('extension');
+        if (input) {
+            input.value = `${locationText}: ${findingText}`;
+            input.dispatchEvent(new Event('input'));
+        }
+        state.metadata.extension = input.value;
+    }
+
     closeMstModal();
     updateFindingsList();
 }
@@ -1291,14 +1301,145 @@ function updateAutoDiagnoses() {
     if (state.findings.length === 0) {
         diagArea.value = "Examen endoscópico normal hasta la porción evaluada.";
     } else {
-        const order = { 'Esófago': 1, 'Estómago': 2, 'Duodeno': 3, 'Yeyuno': 4 };
-        const sortedFindings = [...state.findings].sort((a, b) => order[a.organ] - order[b.organ]);
+        const order = { 'Exploración': 0, 'Esófago': 1, 'Estómago': 2, 'Duodeno': 3, 'Yeyuno': 4 };
+        const sortedFindings = [...state.findings].sort((a, b) => (order[a.organ] ?? 99) - (order[b.organ] ?? 99));
         
         const uniqueOrgans = [...new Set(sortedFindings.map(f => f.organ))];
         let diagText = `Hallazgos patológicos en: ${uniqueOrgans.join(', ')}.\n`;
         sortedFindings.forEach(f => { diagText += `- ${f.organ}: ${f.description}\n`; });
         diagArea.value = diagText;
     }
+}
+
+function cleanMstString(str) {
+    if (!str) return "";
+    
+    // Normalize "Tumor / Masa" immediately
+    let input = str.replace(/Tumor \/ Masa/gi, 'tumor');
+    
+    // Split into individual findings (separated by ' - ' in app state)
+    let components = input.split(' - ').map(s => s.trim());
+    let results = [];
+
+    const labelsToIgnore = [
+        'Número', 'Extensión', 'Situación', 'Aspecto', 'Tipo', 
+        'Grado', 'Tamaño', 'Sangrado', 'Estigmas de sangrado', 'Estigmas',
+        'Circunferencial', 'Obstructivo', 'Pedículo', 'Fondo',
+        'Clasificación', 'Atributos Generales', 'morfología', 'distensibilidad',
+        'cm desde incisivos'
+    ];
+
+    for (let i = 0; i < components.length; i++) {
+        let comp = components[i];
+        let next = components[i + 1] ? components[i + 1].trim() : null;
+        
+        // Handle "Label: Value" format
+        if (comp.includes(':')) {
+            let [label, value] = comp.split(':').map(s => s.trim());
+            comp = label;
+            next = value; // Treat the value as the next item (and we won't skip i++)
+        }
+
+        let l = comp.toLowerCase();
+        let n = next ? next.toLowerCase() : null;
+
+        // Smart combinations
+        if (l === 'sangrado') {
+            if (n === 'no') {
+                results.push('sin evidencia de sangrado activo');
+                if (!components[i].includes(':')) i++; // Skip "no" if it was a separate item
+            } else if (n) {
+                results.push('con sangrado ' + n);
+                if (!components[i].includes(':')) i++;
+            } else {
+                results.push('sangrado');
+            }
+        } else if (l === 'estigmas de sangrado' || l === 'estigmas') {
+            if (n === 'no') {
+                results.push('sin estigmas de sangrado reciente');
+                if (!components[i].includes(':')) i++;
+            } else if (n) {
+                results.push('con estigmas de sangrado ' + n);
+                if (!components[i].includes(':')) i++;
+            } else {
+                results.push('estigmas de sangrado');
+            }
+        } else if (l === 'circunferencial') {
+            if (n === 'si') {
+                results.push('circunferencial');
+                if (!components[i].includes(':')) i++;
+            }
+        } else if (l === 'obstructivo') {
+            if (n === 'si') {
+                results.push('obstructivo');
+                if (!components[i].includes(':')) i++;
+            }
+        } else if (labelsToIgnore.includes(comp)) {
+            // Ignore the label if it's just a structural word
+            continue;
+        } else if (l === 'no') {
+            results.push('ausente');
+        } else if (l === 'si') {
+            results.push('presente');
+        } else {
+            results.push(l);
+        }
+    }
+
+    // Join and final cleanup
+    let clean = results.filter(r => r && r !== 'si' && r !== 'no').join(', ');
+    
+    // Global refinements
+    clean = clean.replace(/\(especificar\)/gi, '');
+    clean = clean.replace(/\s+/g, ' ').trim();
+    
+    return clean;
+}
+
+function formatClinicalNarrative(organ, findings) {
+    if (findings.length === 0) {
+        switch (organ) {
+            case 'Esófago':
+                return "Esófago de morfología, calibre y distensibilidad normales. Mucosa de aspecto sonrosado, lisa y brillante, con trama vascular conservada. Unión esofagogástrica coincidente con la pinza diafragmática, sin evidencia de lesiones ni estigmas de sangrado.";
+            case 'Estómago':
+                return "Estómago con lago gástrico de contenido claro y cantidad habitual. Morfología y distensibilidad conservadas a la insuflación. Pliegues gástricos de trayecto y grosor normal. Mucosa de fondo, cuerpo y antro de características endoscópicas normales. Píloro céntrico, circular y franqueable.";
+            case 'Duodeno':
+                return "Bulbo duodenal y segunda porción duodenal de morfología normal. Mucosa íntegra, de aspecto aterciopelado sin evidencia de soluciones de continuidad ni lesiones protruyentes.";
+            case 'Exploración':
+                return "Procedimiento realizado sin complicaciones técnicas. Extensión del examen satisfactoria según el objetivo clínico. Preparación de la mucosa adecuada que permite una valoración diagnóstica óptima.";
+            default:
+                return "De características endoscópicas normales.";
+        }
+    }
+
+    // Contextual phrasing for findings
+    let intro = "";
+    switch (organ) {
+        case 'Esófago': intro = "Esófago con distensibilidad conservada, sin embargo, "; break;
+        case 'Estómago': intro = "Estómago con lago mucoso de características normales. Durante la exploración "; break;
+        case 'Duodeno': intro = "Duodeno explorado bajo visión directa; "; break;
+        case 'Exploración': intro = "En cuanto a los límites y condiciones del estudio, "; break;
+    }
+
+    const findingSentences = findings.map(f => {
+        const loc = f.location;
+        const desc = cleanMstString(f.description);
+        
+        if (!desc) return null;
+
+        if (loc === 'General' || loc === 'Totalidad del órgano' || loc === 'Totalidad del esófago' || loc === 'Totalidad del estómago') {
+            return `se evidencia ${desc}`;
+        }
+        return `a nivel de ${loc} se aprecia ${desc}`;
+    }).filter(s => s !== null);
+
+    if (findingSentences.length === 0) return formatClinicalNarrative(organ, []);
+
+    let combined = intro + findingSentences.join("; adicionalmente ") + ".";
+    
+    // Final polish: remove double spaces and fix capitalization
+    combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.');
+    return combined.charAt(0).toUpperCase() + combined.slice(1);
 }
 
 function generateReport(skipSave = false) {
@@ -1311,17 +1452,20 @@ function generateReport(skipSave = false) {
     const body = document.getElementById('report-preview-body');
 
     let findingsHtml = '';
-    if (state.findings.length === 0) {
-        findingsHtml = '<p>Normal.</p>';
+    if (state.findings.length === 0 && !state.metadata.diagFinal) {
+        findingsHtml = '<p>Examen endoscópico dentro de los límites de la normalidad.</p>';
     } else {
-        const byOrgan = { 'Esófago': [], 'Estómago': [], 'Duodeno': [], 'Yeyuno': [] };
-        state.findings.forEach(f => { if(byOrgan[f.organ]) byOrgan[f.organ].push(`${f.location}: ${f.description}`); });
+        const byOrgan = { 'Exploración': [], 'Esófago': [], 'Estómago': [], 'Duodeno': [], 'Yeyuno': [] };
+        state.findings.forEach(f => { if(byOrgan[f.organ]) byOrgan[f.organ].push(f); });
         
-        ['Esófago', 'Estómago', 'Duodeno', 'Yeyuno'].forEach(org => {
-            if (byOrgan[org] && byOrgan[org].length > 0) {
-                findingsHtml += `<div style="margin-bottom: 12px;"><strong>${org}:</strong> <span style="color: #333;">${byOrgan[org].join('; ')}.</span></div>`;
-            } else if (org !== 'Yeyuno') {
-                findingsHtml += `<div style="margin-bottom: 12px;"><strong>${org}:</strong> Normal.</div>`;
+        ['Exploración', 'Esófago', 'Estómago', 'Duodeno', 'Yeyuno'].forEach(org => {
+            const organFindings = byOrgan[org];
+            if (organFindings && (organFindings.length > 0 || org !== 'Yeyuno')) {
+                const narrative = formatClinicalNarrative(org, organFindings);
+                findingsHtml += `<div style="margin-bottom: 15px;">
+                    <strong style="color: #000; text-transform: uppercase; font-size: 0.85rem; display: block; margin-bottom: 4px; border-left: 3px solid #333; padding-left: 8px;">${org}:</strong> 
+                    <div style="color: #333; text-align: justify; padding-left: 11px;">${narrative}</div>
+                </div>`;
             }
         });
     }

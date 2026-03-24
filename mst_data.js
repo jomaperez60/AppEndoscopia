@@ -253,6 +253,30 @@ const mstTree = {
         'Lumen': ['Normal', 'Estenosis', 'Divertículo', 'Sangre'],
         'Mucosa': ['Normal', 'Eritema', 'Atrofia (Celiaquía?)', 'Nodularidad'],
         'Lesiones': ['Pólipo', 'Úlcera', 'Angiectasia']
+    },
+    'Exploración': {
+        'Preparación': {
+            'Método': ['(especificar)'],
+            'Cualidad': [
+                'Excelente', 
+                'Adecuada', 
+                'Inadecuada (especificar)', 
+                'Exploración Completa', 
+                'Imposibilita una exploración completa'
+            ]
+        },
+        'Extensión': {
+            'Situación': ['(especificar)']
+        },
+        'Limitación': {
+            'Motivo': [
+                'Adherencias', 
+                'Estenosis', 
+                'Mala preparación', 
+                'Problemas técnicos', 
+                'Otro (especificar)'
+            ]
+        }
     }
 };
 
@@ -289,6 +313,14 @@ const wgoLocations = {
         'Asa aferente yeyunal',
         'Asa eferente yeyunal',
         'Carina yeyunal'
+    ],
+    'Exploración': [
+        'General',
+        'Esófago',
+        'Estómago',
+        'Duodeno',
+        'Yeyuno',
+        'Anastomosis'
     ]
 };
 

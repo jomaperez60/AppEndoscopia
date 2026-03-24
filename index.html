@@ -8,7 +8,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+</head>
+<body class="login-active">
+    <!-- Login Screen Overlay -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div class="logo" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <i class="fa-solid fa-microscope"></i>
+                <span>EndoReport</span>
+            </div>
+            <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px;">Ingrese sus credenciales para continuar</p>
+            <div class="input-group">
+                <label>Usuario</label>
+                <input type="text" id="login-username" placeholder="Nombre de usuario">
+            </div>
+            <div class="input-group" style="margin-top: 16px;">
+                <label>Contraseña</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+            </div>
+            <p id="login-error" style="color: var(--danger); font-size: 0.8rem; margin-top: 10px; display: none;">Usuario o contraseña incorrectos</p>
+            <button class="btn btn-primary" onclick="handleLogin()" style="width: 100%; margin-top: 24px; justify-content: center;">Iniciar Sesión</button>
+        </div>
+    </div>
+
     <div id="app-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
@@ -20,15 +42,17 @@
             <nav>
                 <a href="#" class="nav-item active" id="nav-new" onclick="resetForm()"><i class="fa-solid fa-file-medical"></i> <span>Nuevo Estudio</span></a>
                 <a href="#" class="nav-item" id="nav-history" onclick="switchMainView('history')"><i class="fa-solid fa-users"></i> <span>Pacientes (Base de Datos)</span></a>
+                <a href="#" class="nav-item admin-only" id="nav-users" onclick="switchMainView('users')" style="display: none;"><i class="fa-solid fa-user-shield"></i> <span>Usuarios</span></a>
                 <a href="#" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Estadísticas</span></a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i> <span>Configuración</span></a>
+                <a href="#" class="nav-item" id="nav-settings" onclick="switchMainView('settings')"><i class="fa-solid fa-gear"></i> <span>Configuración</span></a>
             </nav>
             <div class="user-profile">
-                <div class="avatar">Dr</div>
+                <div class="avatar" id="current-user-avatar">Dr</div>
                 <div class="info">
-                    <span class="name">Dr. Médico</span>
-                    <span class="role">Gastroenterología</span>
+                    <span class="name" id="current-user-name" onclick="openPasswordModal(state.currentUser.username)" class="clickable-name" title="Cambiar contraseña">Usuario</span>
+                    <span class="role" id="current-user-role">Cargando...</span>
                 </div>
+                <button class="btn-icon" onclick="handleLogout()" title="Cerrar Sesión" style="margin-left: auto; color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </aside>
 
@@ -366,6 +390,187 @@
                     <div id="history-empty-state" style="text-align: center; padding: 50px; color: var(--text-muted); display: none;">
                         <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
                         <p>No hay estudios registrados todavía.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de Gestión de Usuarios (Admin Only) -->
+            <div class="content-body" id="users-view" style="display: none; padding: 20px;">
+                <div class="card" style="max-width: 800px; margin: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 style="margin: 0;"><i class="fa-solid fa-user-gear"></i> Gestión de Usuarios</h3>
+                        <button class="btn btn-primary" onclick="openUserModal()"><i class="fa-solid fa-plus"></i> Nuevo Usuario</button>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="history-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 12px;">Usuario</th>
+                                    <th style="padding: 12px;">Rol</th>
+                                    <th style="padding: 12px; text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Nuevo Usuario -->
+            <div id="user-modal" class="modal">
+                <div class="modal-content card" style="width: 400px;">
+                    <div class="modal-header">
+                        <h3>Agregar Nuevo Usuario</h3>
+                        <button class="btn-close" onclick="closeUserModal()"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-group">
+                            <label>Nombre de Usuario</label>
+                            <input type="text" id="new-username" placeholder="ej. jsuazo">
+                        </div>
+                        <div class="input-group" style="margin-top: 16px;">
+                            <label>Contraseña</label>
+                            <input type="password" id="new-password" placeholder="••••••••">
+                        </div>
+                        <div class="input-group" style="margin-top: 16px;">
+                            <label>Rol</label>
+                            <select id="new-role">
+                                <option value="user">Usuario Regular</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="saveNewUser()">Guardar Usuario</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Cambiar Contraseña -->
+            <div id="password-modal" class="modal">
+                <div class="modal-content card" style="width: 400px;">
+                    <div class="modal-header">
+                        <h3>Cambiar Contraseña</h3>
+                        <button class="btn-close" onclick="document.getElementById('password-modal').classList.remove('active')"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-group">
+                            <label>Nueva Contraseña</label>
+                            <input type="password" id="change-password-new" placeholder="••••••••">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="document.getElementById('password-modal').classList.remove('active')">Cancelar</button>
+                        <button class="btn btn-primary" onclick="handleChangePassword()">Actualizar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vista de Configuración -->
+            <div class="content-body" id="settings-view" style="display: none; padding: 20px;">
+                <div style="max-width: 900px; margin: auto;">
+                    <h2 style="margin-bottom: 24px;"><i class="fa-solid fa-sliders"></i> Configuración del Sistema</h2>
+                    
+                    <div class="form-grid">
+                        <!-- Perfil de Usuario -->
+                        <div class="card">
+                            <h3><i class="fa-solid fa-user-circle"></i> Mi Perfil</h3>
+                            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                                <div class="avatar large" id="settings-avatar-preview">Dr</div>
+                                <div style="flex: 1;">
+                                    <button class="btn btn-outline" style="width: 100%; margin-bottom: 8px;" onclick="document.getElementById('avatar-upload').click()">
+                                        <i class="fa-solid fa-camera"></i> Subir Foto
+                                    </button>
+                                    <input type="file" id="avatar-upload" hidden accept="image/*" onchange="uploadAvatar(event)">
+                                    <button class="btn btn-secondary" style="width: 100%;" onclick="openEmojiPicker()">
+                                        <i class="fa-solid fa-face-smile"></i> Elegir Emoji
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Nombre de Usuario</label>
+                                <input type="text" id="settings-username" readonly class="auto-filled">
+                            </div>
+                            <div class="input-group" style="margin-top: 16px;">
+                                <label>Contraseña</label>
+                                <button class="btn btn-outline" style="width: 100%;" onclick="openPasswordModal(state.currentUser.username)">Cambiar Contraseña</button>
+                            </div>
+                        </div>
+
+                        <!-- Ajustes de Reporte -->
+                        <div class="card">
+                            <h3><i class="fa-solid fa-file-invoice"></i> Personalización de Reportes</h3>
+                            <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                                <div id="settings-logo-preview" style="width: 60px; height: 60px; border: 1px dashed var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: white;">
+                                    <i class="fa-solid fa-image" style="color: #ccc;"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <button class="btn btn-outline" style="width: 100%; font-size: 0.8rem;" onclick="document.getElementById('logo-upload').click()">
+                                        <i class="fa-solid fa-upload"></i> Logo del Centro
+                                    </button>
+                                    <input type="file" id="logo-upload" hidden accept="image/*" onchange="uploadLogo(event)">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>Nombre del Hospital / Clínica</label>
+                                <input type="text" id="settings-hospital" placeholder="Ej. Hospital General del Norte">
+                            </div>
+                            <div class="input-group" style="margin-top: 16px;">
+                                <label>Ciudad / Ubicación</label>
+                                <input type="text" id="settings-location" placeholder="Ej. San Pedro Sula, Honduras">
+                            </div>
+                            <div class="input-group" style="margin-top: 16px;">
+                                <label>Nombre del Médico (Para firma)</label>
+                                <input type="text" id="settings-physician" placeholder="Dr. Jorge Suazo">
+                            </div>
+                            <div class="input-group" style="margin-top: 16px;">
+                                <label>Especialidad</label>
+                                <input type="text" id="settings-specialty" placeholder="Gastroenterólogo - Endoscopista">
+                            </div>
+                        </div>
+
+                        <!-- Preferencias de App -->
+                        <div class="card">
+                            <h3><i class="fa-solid fa-globe"></i> Preferencias de Aplicación</h3>
+                            <div class="input-group">
+                                <label>Idioma de la Interfaz</label>
+                                <select id="settings-language" onchange="toggleLanguage(this.value)">
+                                    <option value="es" selected>Español</option>
+                                    <option value="en">English (Básico)</option>
+                                </select>
+                            </div>
+                            <div class="input-group" style="margin-top: 16px;">
+                                <label>Unidades de Medida</label>
+                                <select id="settings-units">
+                                    <option value="cm" selected>Centímetros (cm)</option>
+                                    <option value="mm">Milímetros (mm)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                        <button class="btn btn-secondary" onclick="resetSettings()">Restablecer</button>
+                        <button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-save"></i> Guardar Todos los Cambios</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Selector de Emojis -->
+            <div id="emoji-modal" class="modal">
+                <div class="modal-content card" style="width: 350px;">
+                    <div class="modal-header">
+                        <h3>Elegir un Emoji</h3>
+                        <button class="btn-close" onclick="closeEmojiPicker()"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="emoji-grid" id="emoji-list">
+                            <!-- Se llena dinámicamente -->
+                        </div>
                     </div>
                 </div>
             </div>

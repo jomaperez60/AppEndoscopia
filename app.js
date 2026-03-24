@@ -31,7 +31,10 @@ const state = {
         extension: 'Duodeno D2'
     },
     findings: [],
-    plan: ''
+    plan: '',
+    users: JSON.parse(localStorage.getItem('endo_users') || '[{"username":"admin","password":"admin","role":"admin","avatar":"Dr"}]'),
+    currentUser: JSON.parse(sessionStorage.getItem('endo_current_user') || 'null'),
+    settings: JSON.parse(localStorage.getItem('endo_settings') || '{"hospital":"Hospital Local","physician":"Dr. Clínico","location":"","specialty":"","language":"es","units":"cm","logo":null}')
 };
 
 function calculateAge(dateString) {
@@ -163,33 +166,290 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateTopbar();
+    checkAuth();
 });
+
+// --- Auth & User Management Logic ---
+
+function checkAuth() {
+    const overlay = document.getElementById('login-overlay');
+    if (state.currentUser) {
+        document.body.classList.remove('login-active');
+        overlay.style.display = 'none';
+        document.getElementById('current-user-name').innerText = state.currentUser.username;
+        document.getElementById('current-user-role').innerText = state.currentUser.role === 'admin' ? 'Administrador' : 'Médico General';
+        
+        // Show/hide admin-only elements
+        const adminElements = document.querySelectorAll('.admin-only');
+        adminElements.forEach(el => el.style.display = state.currentUser.role === 'admin' ? 'flex' : 'none');
+        
+        updateAvatarDisplay();
+        if (state.currentUser.role === 'admin') renderUsers();
+    } else {
+        document.body.classList.add('login-active');
+        overlay.style.display = 'flex';
+    }
+}
+
+function handleLogin() {
+    const user = document.getElementById('login-username').value;
+    const pass = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+
+    const foundUser = state.users.find(u => u.username === user && u.password === pass);
+
+    if (foundUser) {
+        state.currentUser = foundUser;
+        sessionStorage.setItem('endo_current_user', JSON.stringify(foundUser));
+        errorEl.style.display = 'none';
+        checkAuth();
+        // Clear inputs
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+    } else {
+        errorEl.style.display = 'block';
+    }
+}
+
+function handleLogout() {
+    state.currentUser = null;
+    sessionStorage.removeItem('endo_current_user');
+    checkAuth();
+    switchMainView('new');
+}
+
+function renderUsers() {
+    const body = document.getElementById('users-table-body');
+    if (!body) return;
+
+    body.innerHTML = state.users.map(u => `
+        <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px;">
+                <span class="clickable-name" onclick="openPasswordModal('${u.username}')">${u.username}</span>
+            </td>
+            <td style="padding: 12px;">
+                <span class="${u.role}-badge">${u.role === 'admin' ? 'Admin' : 'Médico'}</span>
+            </td>
+            <td style="padding: 12px; text-align: center;">
+                ${u.username !== 'admin' ? `
+                    <button class="btn btn-icon" onclick="deleteUser('${u.username}')" style="color: var(--danger);"><i class="fa-solid fa-user-minus"></i></button>
+                ` : '<span style="font-size: 0.7rem; color: var(--text-muted);">Sustema</span>'}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openUserModal() { document.getElementById('user-modal').classList.add('active'); }
+function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
+
+function saveNewUser() {
+    const user = document.getElementById('new-username').value.trim();
+    const pass = document.getElementById('new-password').value;
+    const role = document.getElementById('new-role').value;
+
+    if (!user || !pass) { alert("Por favor, complete todos los campos."); return; }
+    if (state.users.some(u => u.username === user)) { alert("El nombre de usuario ya existe."); return; }
+
+    state.users.push({ username: user, password: pass, role: role });
+    localStorage.setItem('endo_users', JSON.stringify(state.users));
+    closeUserModal();
+    renderUsers();
+}
+
+function deleteUser(username) {
+    if (confirm(`¿Está seguro de eliminar al usuario ${username}?`)) {
+        state.users = state.users.filter(u => u.username !== username);
+        localStorage.setItem('endo_users', JSON.stringify(state.users));
+        renderUsers();
+    }
+}
+
+let userToPasswordChange = '';
+function openPasswordModal(username) {
+    // Only admin can change others' passwords, or a user can change their own
+    if (state.currentUser.role !== 'admin' && state.currentUser.username !== username) return;
+    userToPasswordChange = username;
+    document.getElementById('password-modal').classList.add('active');
+}
+
+function handleChangePassword() {
+    const newPass = document.getElementById('change-password-new').value;
+    if (!newPass) return;
+
+    const userIdx = state.users.findIndex(u => u.username === userToPasswordChange);
+    if (userIdx !== -1) {
+        state.users[userIdx].password = newPass;
+        localStorage.setItem('endo_users', JSON.stringify(state.users));
+        
+        // If changing current user's password, update session too
+        if (state.currentUser.username === userToPasswordChange) {
+            state.currentUser.password = newPass;
+            sessionStorage.setItem('endo_current_user', JSON.stringify(state.currentUser));
+        }
+        
+        alert("Contraseña actualizada exitosamente.");
+        document.getElementById('password-modal').classList.remove('active');
+        renderUsers();
+    }
+}
+
+// --- Settings Logic ---
+
+function renderSettings() {
+    if (!state.currentUser) return;
+    
+    document.getElementById('settings-username').value = state.currentUser.username;
+    document.getElementById('settings-hospital').value = state.settings.hospital || '';
+    document.getElementById('settings-location').value = state.settings.location || '';
+    document.getElementById('settings-physician').value = state.settings.physician || '';
+    document.getElementById('settings-specialty').value = state.settings.specialty || '';
+    document.getElementById('settings-language').value = state.settings.language || 'es';
+    document.getElementById('settings-units').value = state.settings.units || 'cm';
+    
+    updateAvatarDisplay();
+    updateLogoDisplay();
+}
+
+function updateLogoDisplay() {
+    const preview = document.getElementById('settings-logo-preview');
+    if (!preview) return;
+    if (state.settings.logo) {
+        preview.innerHTML = `<img src="${state.settings.logo}" style="width: 100%; height: 100%; object-fit: contain;">`;
+    } else {
+        preview.innerHTML = `<i class="fa-solid fa-image" style="color: #ccc;"></i>`;
+    }
+}
+
+function uploadLogo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        state.settings.logo = e.target.result;
+        localStorage.setItem('endo_settings', JSON.stringify(state.settings));
+        updateLogoDisplay();
+    };
+    reader.readAsDataURL(file);
+}
+
+function saveSettings() {
+    state.settings.hospital = document.getElementById('settings-hospital').value;
+    state.settings.location = document.getElementById('settings-location').value;
+    state.settings.physician = document.getElementById('settings-physician').value;
+    state.settings.specialty = document.getElementById('settings-specialty').value;
+    state.settings.language = document.getElementById('settings-language').value;
+    state.settings.units = document.getElementById('settings-units').value;
+    
+    localStorage.setItem('endo_settings', JSON.stringify(state.settings));
+    alert("Configuración guardada correctamente.");
+}
+
+function updateAvatarDisplay() {
+    const avatars = [document.getElementById('current-user-avatar'), document.getElementById('settings-avatar-preview')];
+    const avatarData = state.currentUser.avatar || 'Dr';
+    
+    avatars.forEach(avatarEl => {
+        if (!avatarEl) return;
+        if (avatarData.startsWith('data:image')) {
+            avatarEl.style.backgroundImage = `url(${avatarData})`;
+            avatarEl.innerText = '';
+        } else {
+            avatarEl.style.backgroundImage = 'none';
+            avatarEl.innerText = avatarData;
+        }
+    });
+}
+
+function uploadAvatar(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        state.currentUser.avatar = e.target.result;
+        updateUserInDB(state.currentUser);
+        updateAvatarDisplay();
+    };
+    reader.readAsDataURL(file);
+}
+
+const emojisList = ['👨‍⚕️', '👩‍⚕️', '🩺', '🔬', '🏥', '🧠', '🫀', '🦷', '🧪', '🥑', '🍎', '🏃', '🧘', '✨', '⭐', '🔷', '🔶', '📁', '📄', '🛡️'];
+
+function openEmojiPicker() {
+    const modal = document.getElementById('emoji-modal');
+    const list = document.getElementById('emoji-list');
+    modal.classList.add('active');
+    
+    list.innerHTML = emojisList.map(e => `
+        <div class="emoji-item" onclick="selectEmoji('${e}')">${e}</div>
+    `).join('');
+}
+
+function closeEmojiPicker() { document.getElementById('emoji-modal').classList.remove('active'); }
+
+function selectEmoji(emoji) {
+    state.currentUser.avatar = emoji;
+    updateUserInDB(state.currentUser);
+    updateAvatarDisplay();
+    closeEmojiPicker();
+}
+
+function updateUserInDB(user) {
+    const idx = state.users.findIndex(u => u.username === user.username);
+    if (idx !== -1) {
+        state.users[idx] = { ...user };
+        localStorage.setItem('endo_users', JSON.stringify(state.users));
+        sessionStorage.setItem('endo_current_user', JSON.stringify(user));
+    }
+}
+
+function resetSettings() {
+    if (confirm("¿Restablecer todos los ajustes a los valores iniciales?")) {
+        state.settings = { hospital: "Hospital Local", physician: "Dr. Clínico", location: "", specialty: "", language: "es", units: "cm" };
+        localStorage.setItem('endo_settings', JSON.stringify(state.settings));
+        renderSettings();
+    }
+}
+
+function toggleLanguage(lang) {
+    state.settings.language = lang;
+    localStorage.setItem('endo_settings', JSON.stringify(state.settings));
+    alert("Idioma cambiado a: " + (lang === 'es' ? 'Español' : 'Inglés') + ". (Traducción parcial en esta versión)");
+}
 
 function switchMainView(view) {
     const newView = document.getElementById('dynamic-view');
     const historyView = document.getElementById('history-view');
+    const usersView = document.getElementById('users-view');
+    const settingsView = document.getElementById('settings-view');
     const newActions = document.getElementById('topbar-actions');
     const historyActions = document.getElementById('history-actions');
     const navNew = document.getElementById('nav-new');
     const navHistory = document.getElementById('nav-history');
+    const navUsers = document.getElementById('nav-users');
+    const navSettings = document.getElementById('nav-settings');
+
+    // Hide all views first
+    [newView, historyView, usersView, settingsView].forEach(v => { if(v) v.style.display = 'none'; });
+    [newActions, historyActions].forEach(a => { if(a) a.style.display = 'none'; });
+    [navNew, navHistory, navUsers, navSettings].forEach(n => { if(n) n.classList.remove('active'); });
 
     if (view === 'new') {
-        newView.style.display = 'block';
-        historyView.style.display = 'none';
-        newActions.style.display = 'flex';
-        historyActions.style.display = 'none';
+        if(newView) newView.style.display = 'block';
+        if(newActions) newActions.style.display = 'flex';
         navNew.classList.add('active');
-        navHistory.classList.remove('active');
         document.getElementById('topbar-name').textContent = state.patient.nombre || "Nuevo Paciente";
-    } else {
-        newView.style.display = 'none';
-        historyView.style.display = 'block';
-        newActions.style.display = 'none';
-        historyActions.style.display = 'flex';
-        navNew.classList.remove('active');
+    } else if (view === 'history') {
+        if(historyView) historyView.style.display = 'block';
+        if(historyActions) historyActions.style.display = 'flex';
         navHistory.classList.add('active');
         document.getElementById('topbar-name').textContent = "Base de Datos de Pacientes";
         renderHistory();
+    } else if (view === 'settings') {
+        if(settingsView) settingsView.style.display = 'block';
+        navSettings.classList.add('active');
+        document.getElementById('topbar-name').textContent = "Configuración del Sistema";
+        renderSettings();
     }
 }
 
@@ -449,92 +709,96 @@ function generateReport(skipSave = false) {
         
         ['Esófago', 'Estómago', 'Duodeno'].forEach(org => {
             if (byOrgan[org].length > 0) {
-                findingsHtml += `<strong>${org}:</strong> <ul>`;
-                byOrgan[org].forEach(desc => findingsHtml += `<li>${desc}</li>`);
-                findingsHtml += `</ul>`;
+                findingsHtml += `<div style="margin-bottom: 12px;"><strong>${org}:</strong> <span style="color: #333;">${byOrgan[org].join(', ')}.</span></div>`;
             } else {
-                findingsHtml += `<strong>${org}:</strong> Normal.<br>`;
+                findingsHtml += `<div style="margin-bottom: 12px;"><strong>${org}:</strong> Normal.</div>`;
             }
         });
     }
 
     const html = `
-        <div class="report-document">
-            <h1>Reporte de Endoscopia Digestiva Alta</h1>
-            <div class="report-section">
-                <h4>1. Información del Paciente</h4>
-                <div class="report-row"><div class="report-label">Nombre:</div> <div>${state.patient.nombre || 'No especificado'}</div></div>
-                <div class="report-row"><div class="report-label">DNI:</div> <div>${state.patient.dni || 'No especificado'}</div></div>
-                <div class="report-row"><div class="report-label">Edad / Sexo:</div> <div>${state.patient.edad !== '' ? state.patient.edad + ' años' : 'No esp.'} / ${state.patient.sexo || 'No esp.'}</div></div>
-                <div class="report-row"><div class="report-label">Procedencia:</div> <div>${state.patient.municipio ? state.patient.municipio + ', ' : ''}${state.patient.departamento || 'No especificada'}</div></div>
-                <div class="report-row"><div class="report-label">Antecedentes:</div> <div>${state.patient.antecedentes || 'Sin antecedentes registrados'}</div></div>
-                <div class="report-row"><div class="report-label">Fecha Examen:</div> <div>${new Date().toLocaleDateString('es-ES')}</div></div>
-            </div>
-            <div class="report-section">
-                <h4>2. Datos Clínicos</h4>
-                <div class="report-row"><div class="report-label">Médico Referente:</div> <div>${state.clinical.referente || 'No especificado'}</div></div>
-                <div class="report-row"><div class="report-label">Riesgo ASA:</div> <div>${state.clinical.asa}</div></div>
-                <div class="report-row"><div class="report-label">Anticoag./Antiagreg.:</div> <div>${state.clinical.anticoagulante}</div></div>
-                <div class="report-row"><div class="report-label">Preparación:</div> <div>${state.clinical.preparacion}</div></div>
-            </div>
-            <div class="report-section">
-                <h4>3. Datos del Procedimiento</h4>
-                <div class="report-row"><div class="report-label">Indicación Médica:</div> <div>${state.metadata.indicacion || 'No especificada'}</div></div>
-                <div class="report-row"><div class="report-label">Sedación:</div> <div>${state.metadata.sedacion}</div></div>
-                <div class="report-row"><div class="report-label">Instrumento:</div> <div>${state.metadata.instrumento}</div></div>
-                <div class="report-row"><div class="report-label">Extensión:</div> <div>Se intuba bajo visión directa hasta ${state.metadata.extension}</div></div>
-            </div>
-            <div class="report-section">
-                <h4>4. Descripción Macroscópica</h4>
-                <div style="padding-left: 10px;">${findingsHtml}</div>
+        <div class="report-document" style="padding: 50px; color: #1a1a1a; font-family: 'Inter', sans-serif; line-height: 1.5;">
+            <!-- Header Structure -->
+            <div style="display: flex; align-items: center; border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 30px;">
+                ${state.settings.logo ? `<div style="width: 100px; padding-right: 20px;"><img src="${state.settings.logo}" style="width: 100%; max-height: 100px; object-fit: contain;"></div>` : ''}
+                <div style="flex: 1; text-align: ${state.settings.logo ? 'left' : 'center'};">
+                    <h1 style="margin: 0; font-size: 1.8rem; letter-spacing: -0.5px; color: #000;">${state.settings.hospital || "HOSPITAL GENERAL"}</h1>
+                    <p style="margin: 4px 0 0 0; color: #555; font-size: 1rem; font-weight: 500;">${state.settings.location || "SERVICIO DE GASTROENTEROLOGÍA Y ENDOSCOPIA"}</p>
+                </div>
             </div>
 
+            <div style="text-align: center; margin-bottom: 35px;">
+                <h2 style="margin: 0; font-size: 1.4rem; text-transform: uppercase; border-bottom: 1px solid #eee; display: inline-block; padding: 0 40px 5px 40px;">Informe Médico de Endoscopia</h2>
+                <div style="font-size: 0.9rem; color: #666; margin-top: 8px;">Fecha de emisión: ${new Date().toLocaleDateString('es-ES')}</div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 0.95rem;">
+                <tr style="background: #f9fafb; border: 1px solid #eee;">
+                    <td style="padding: 10px; font-weight: bold; width: 120px;">PACIENTE:</td>
+                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.patient.nombre || 'No registro'}</td>
+                    <td style="padding: 10px; font-weight: bold; width: 100px;">DNI:</td>
+                    <td style="padding: 10px;">${state.patient.dni || 'No registro'}</td>
+                </tr>
+                <tr style="border: 1px solid #eee;">
+                    <td style="padding: 10px; font-weight: bold;">EDAD / SEXO:</td>
+                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.patient.edad ? state.patient.edad + ' años' : '-'} / ${state.patient.sexo || '-'}</td>
+                    <td style="padding: 10px; font-weight: bold;">PROCEDENCIA:</td>
+                    <td style="padding: 10px;">${state.patient.municipio ? state.patient.municipio + ', ' : ''}${state.patient.departamento || '-'}</td>
+                </tr>
+                <tr style="border: 1px solid #eee;">
+                    <td style="padding: 10px; font-weight: bold;">MÉDICO REF:</td>
+                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.clinical.referente || 'No especificado'}</td>
+                    <td style="padding: 10px; font-weight: bold;">INDICACIÓN:</td>
+                    <td style="padding: 10px;">${state.metadata.indicacion || 'Screening'}</td>
+                </tr>
+            </table>
+
+            <div style="margin-bottom: 30px;">
+                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">HALLAZGOS MACROSCÓPICOS</div>
+                <div style="padding-left: 5px;">${findingsHtml}</div>
+            </div>
+
+            <div style="margin-bottom: 35px;">
+                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">CONCLUSIONES Y DIAGNÓSTICO</div>
+                <div style="padding: 10px; background: #fefce8; border: 1px solid #fef08a; border-radius: 4px; border-left: 4px solid #eab308; white-space: pre-wrap; font-weight: 500;">${document.getElementById('diag-final').value}</div>
+            </div>
+
+            <!-- Photos Section -->
             ${state.images.length > 0 ? `
-            <div class="report-section">
-                <h4>5. Registro Fotográfico</h4>
-                <div style="display: flex; gap: 20px; align-items: flex-start;">
-                    <div style="position: relative; width: 250px; border: 1px solid #eee;">
-                        <img src="gi_diagram.png" style="width: 100%;">
-                        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                            ${state.images.map((img, i) => img.x !== null ? `
-                                <rect x="${img.x - 2.5}%" y="${img.y - 2.5}%" width="5%" height="5%" fill="#f1c40f" stroke="black" stroke-width="0.5" rx="1" />
-                                <text x="${img.x}%" y="${img.y + 1}%" font-size="8" text-anchor="middle" font-weight="bold" fill="black">${i + 1}</text>
-                            ` : '').join('')}
-                        </svg>
-                    </div>
-                    <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 10px;">
-                        ${state.images.map((img, i) => `
-                            <div style="width: 160px; text-align: center; border: 1px solid #eee; padding: 5px; border-radius: 4px;">
-                                <img src="${img.data}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 2px;">
-                                <div style="font-size: 10px; color: #333; margin-top: 4px;"><strong>Fig ${i + 1}:</strong> ${img.label}</div>
-                            </div>
-                        `).join('')}
-                    </div>
+            <div style="margin-bottom: 40px; page-break-before: auto;">
+                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">DOCUMENTACIÓN FOTOGRÁFICA</div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    ${state.images.map((img, i) => `
+                        <div style="text-align: center;">
+                            <img src="${img.data}" style="width: 100%; height: 140px; object-fit: cover; border: 1px solid #eee; border-radius: 4px;">
+                            <div style="font-size: 0.8rem; margin-top: 5px;"><strong>Fig ${i + 1}:</strong> ${img.label}</div>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
             ` : ''}
 
-            <div class="report-section">
-                <h4>6. Diagnóstico Final</h4>
-                <div style="padding-left: 10px; white-space: pre-wrap;">${document.getElementById('diag-final').value}</div>
+            <div style="margin-bottom: 40px;">
+                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">PLAN Y RECOMENDACIONES</div>
+                <div style="padding-left: 5px; white-space: pre-wrap;">${state.plan || 'No se registran recomendaciones adicionales en esta fecha.'}</div>
             </div>
-            <div class="report-section">
-                <h4>7. Indicadores de Calidad</h4>
-                <div class="report-row"><div class="report-label">Consentimiento:</div> <div>${state.quality.consentimiento}</div></div>
-                <div class="report-row"><div class="report-label">Duración Estudio:</div> <div>${state.quality.tiempo}</div></div>
-                <div class="report-row"><div class="report-label">Exploración:</div> <div>${state.quality.completa}</div></div>
-                <div class="report-row"><div class="report-label">Fotodocumentación:</div> <div>${state.quality.fotos}</div></div>
+
+            <div style="margin-top: 80px; display: flex; justify-content: flex-end;">
+                <div style="text-align: center; width: 300px; border-top: 1px solid #000; padding-top: 10px;">
+                    <div style="font-weight: 800; font-size: 1.1rem; color: #000;">${state.settings.physician || state.currentUser.username}</div>
+                    <div style="font-size: 0.9rem; color: #444;">${state.settings.specialty || "Médico Gastroenterólogo"}</div>
+                    <div style="font-size: 0.8rem; color: #777; margin-top: 2px;">Sello y Firma Autorizada</div>
+                </div>
             </div>
-            <div class="report-section">
-                <h4>8. Plan y Recomendaciones</h4>
-                <div style="padding-left: 10px; white-space: pre-wrap;">${state.plan || 'Sin recomendaciones adicionales.'}</div>
+            
+            <div style="margin-top: 40px; font-size: 0.75rem; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
+                Generado por Sistema de Reportes EndoReport - Documentación Médica Digital
             </div>
         </div>`;
 
     body.innerHTML = html;
     modal.classList.add('active');
 
-    // Automatically save to history when report is generated (only if new)
     if(!skipSave) saveToHistory();
 }
 
@@ -614,8 +878,8 @@ function renderHistory(filter = "") {
             <td style="padding: 12px; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.diagnoses || '-'}</td>
             <td style="padding: 12px; text-align: center; white-space: nowrap;">
                 <button class="btn btn-icon" title="Ver Reporte" onclick="viewHistoryDetail('${r.id}')" style="color: var(--success); margin-right: 5px;"><i class="fa-solid fa-eye"></i></button>
-                <button class="btn btn-icon" title="Cargar para Editar" onclick="loadFromHistory('${r.id}')" style="color: var(--primary); margin-right: 5px;"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="btn btn-icon" title="Eliminar" onclick="deleteFromHistory('${r.id}')" style="color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede editar' : 'Cargar para Editar'}" onclick="loadFromHistory('${r.id}')" style="color: var(--primary); margin-right: 5px; opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede eliminar' : 'Eliminar'}" onclick="deleteFromHistory('${r.id}')" style="color: var(--danger); opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-trash"></i></button>
             </td>
         </tr>
     `).join('');
@@ -640,6 +904,10 @@ function loadFromHistory(id, silent = false) {
     }
 
     if(!silent) {
+        if(state.currentUser.role !== 'admin') {
+            alert("Solo los administradores pueden editar estudios guardados.");
+            return;
+        }
         if(!confirm("¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
     }
 
@@ -709,6 +977,10 @@ function loadFromHistory(id, silent = false) {
 function filterHistory(val) { renderHistory(val); }
 
 function deleteFromHistory(id) {
+    if(state.currentUser.role !== 'admin') {
+        alert("Solo los administradores pueden eliminar estudios.");
+        return;
+    }
     if(confirm("¿Eliminar este registro?")) {
         state.history = state.history.filter(r => String(r.id) !== String(id));
         localStorage.setItem('endo_history', JSON.stringify(state.history));

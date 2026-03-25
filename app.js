@@ -235,7 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function checkAuth() {
     const overlay = document.getElementById('login-overlay');
-    if (state.currentUser) {
+    const token = sessionStorage.getItem('endo_token');
+    
+    if (token && state.currentUser) {
         document.body.classList.remove('login-active');
         overlay.style.display = 'none';
         document.getElementById('current-user-name').innerText = state.currentUser.username;
@@ -253,22 +255,37 @@ function checkAuth() {
     }
 }
 
-function handleLogin() {
+async function handleLogin() {
     const user = document.getElementById('login-username').value;
     const pass = document.getElementById('login-password').value;
     const errorEl = document.getElementById('login-error');
 
-    const foundUser = state.users.find(u => u.username === user && u.password === pass);
-
-    if (foundUser) {
-        state.currentUser = foundUser;
-        sessionStorage.setItem('endo_current_user', JSON.stringify(foundUser));
-        errorEl.style.display = 'none';
-        checkAuth();
-        // Clear inputs
-        document.getElementById('login-username').value = '';
-        document.getElementById('login-password').value = '';
-    } else {
+    try {
+        const response = await fetch('http://localhost:3000/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            state.currentUser = data.user;
+            sessionStorage.setItem('endo_current_user', JSON.stringify(data.user));
+            sessionStorage.setItem('endo_token', data.token);
+            errorEl.style.display = 'none';
+            checkAuth();
+            
+            // Clear inputs
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+        } else {
+            errorEl.innerText = data.error || 'Usuario o contraseña incorrectos';
+            errorEl.style.display = 'block';
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        errorEl.innerText = 'Error conectando al servidor';
         errorEl.style.display = 'block';
     }
 }
@@ -276,53 +293,91 @@ function handleLogin() {
 function handleLogout() {
     state.currentUser = null;
     sessionStorage.removeItem('endo_current_user');
+    sessionStorage.removeItem('endo_token');
     checkAuth();
     switchMainView('new');
 }
 
-function renderUsers() {
+async function renderUsers() {
     const body = document.getElementById('users-table-body');
     if (!body) return;
 
-    body.innerHTML = state.users.map(u => `
-        <tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 12px;">
-                <span class="clickable-name" onclick="openPasswordModal('${u.username}')">${u.username}</span>
-            </td>
-            <td style="padding: 12px;">
-                <span class="${u.role}-badge">${u.role === 'admin' ? 'Admin' : 'Médico'}</span>
-            </td>
-            <td style="padding: 12px; text-align: center;">
-                ${u.username !== 'admin' ? `
-                    <button class="btn btn-icon" onclick="deleteUser('${u.username}')" style="color: var(--danger);"><i class="fa-solid fa-user-minus"></i></button>
-                ` : '<span style="font-size: 0.7rem; color: var(--text-muted);">Sustema</span>'}
-            </td>
-        </tr>
-    `).join('');
+    const token = sessionStorage.getItem('endo_token');
+    if (!token) return;
+
+    try {
+        const res = await fetch('http://localhost:3000/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const users = await res.json();
+        state.users = users;
+
+        body.innerHTML = users.map(u => `
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px;">
+                    <span class="clickable-name" onclick="openPasswordModal('${u.username}')">${u.username}</span>
+                </td>
+                <td style="padding: 12px;">
+                    <span class="${u.role}-badge">${u.role === 'admin' ? 'Admin' : 'Médico'}</span>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    ${u.username !== 'admin' ? `
+                        <button class="btn btn-icon" onclick="deleteUser('${u.username}')" style="color: var(--danger);"><i class="fa-solid fa-user-minus"></i></button>
+                    ` : '<span style="font-size: 0.7rem; color: var(--text-muted);">Sistema</span>'}
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        console.error("Error fetching users:", e);
+    }
 }
 
 function openUserModal() { document.getElementById('user-modal').classList.add('active'); }
 function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
 
-function saveNewUser() {
+async function saveNewUser() {
     const user = document.getElementById('new-username').value.trim();
     const pass = document.getElementById('new-password').value;
     const role = document.getElementById('new-role').value;
 
     if (!user || !pass) { alert("Por favor, complete todos los campos."); return; }
-    if (state.users.some(u => u.username === user)) { alert("El nombre de usuario ya existe."); return; }
 
-    state.users.push({ username: user, password: pass, role: role });
-    localStorage.setItem('endo_users', JSON.stringify(state.users));
-    closeUserModal();
-    renderUsers();
+    const token = sessionStorage.getItem('endo_token');
+    try {
+        const res = await fetch('http://localhost:3000/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ username: user, password: pass, role })
+        });
+        
+        if (res.ok) {
+            closeUserModal();
+            renderUsers();
+            alert("Usuario creado exitosamente.");
+        } else {
+            const data = await res.json();
+            alert("Error: " + (data.error || "Algo salió mal."));
+        }
+    } catch (e) {
+        alert("Error de conexión.");
+    }
 }
 
-function deleteUser(username) {
+async function deleteUser(username) {
     if (confirm(`¿Está seguro de eliminar al usuario ${username}?`)) {
-        state.users = state.users.filter(u => u.username !== username);
-        localStorage.setItem('endo_users', JSON.stringify(state.users));
-        renderUsers();
+        const token = sessionStorage.getItem('endo_token');
+        try {
+            const res = await fetch(`http://localhost:3000/users/${username}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                renderUsers();
+            } else {
+                alert("Error al eliminar usuario.");
+            }
+        } catch(e) { console.error(e); }
     }
 }
 
@@ -334,25 +389,26 @@ function openPasswordModal(username) {
     document.getElementById('password-modal').classList.add('active');
 }
 
-function handleChangePassword() {
+async function handleChangePassword() {
     const newPass = document.getElementById('change-password-new').value;
     if (!newPass) return;
 
-    const userIdx = state.users.findIndex(u => u.username === userToPasswordChange);
-    if (userIdx !== -1) {
-        state.users[userIdx].password = newPass;
-        localStorage.setItem('endo_users', JSON.stringify(state.users));
+    const token = sessionStorage.getItem('endo_token');
+    try {
+        const res = await fetch(`http://localhost:3000/users/${userToPasswordChange}/password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ newPassword: newPass })
+        });
         
-        // If changing current user's password, update session too
-        if (state.currentUser.username === userToPasswordChange) {
-            state.currentUser.password = newPass;
-            sessionStorage.setItem('endo_current_user', JSON.stringify(state.currentUser));
+        if (res.ok) {
+            alert("Contraseña actualizada exitosamente.");
+            document.getElementById('password-modal').classList.remove('active');
+            renderUsers();
+        } else {
+            alert("Error al actualizar la contraseña.");
         }
-        
-        alert("Contraseña actualizada exitosamente.");
-        document.getElementById('password-modal').classList.remove('active');
-        renderUsers();
-    }
+    } catch(e) { alert("Error de conexión"); }
 }
 
 // --- Settings Logic ---
@@ -1808,96 +1864,118 @@ function printReport() {
 
 // --- History & Database Logic ---
 
-function saveToHistory() {
+async function saveToHistory() {
     if(!state.patient.nombre) {
         alert("Por favor, ingrese al menos el nombre del paciente para guardar.");
         return;
     }
 
+    const token = sessionStorage.getItem('endo_token');
+    if (!token) {
+        alert("Debe iniciar sesión para guardar estudios.");
+        return;
+    }
+
     const record = {
-        id: state.currentStudyId || Date.now(),
-        date: formatDate(),
-        dateTime: new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-'),
+        currentStudyId: state.currentStudyId,
         patient: { ...state.patient },
         clinical: { ...state.clinical },
         metadata: { ...state.metadata },
         quality: { ...state.quality },
-        diagnoses: document.getElementById('diag-final').value,
+        diagnoses: document.getElementById('diag-final')?.value || '',
         plan: state.plan,
         findings: [ ...state.findings ],
         procedimientos: [ ...state.procedimientos ],
-        images: [ ...state.images ] // Persist images too!
+        images: [ ...state.images ]
     };
 
-    const existingIdx = state.history.findIndex(r => r.id === record.id);
-    if (existingIdx !== -1) {
-        state.history[existingIdx] = record;
-        console.log("Estudio actualizado en el historial.");
-    } else {
-        state.history.unshift(record);
-        state.currentStudyId = record.id;
-        console.log("Nuevo estudio guardado en el historial.");
+    try {
+        const res = await fetch('http://localhost:3000/studies', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(record)
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            state.currentStudyId = data.studyId;
+            console.log(`Estudio guardado. Versión: ${data.version}`);
+            renderHistory();
+            alert("Estudio guardado correctamente.");
+        } else {
+            alert("Error al guardar: " + (data.error || 'Server error'));
+        }
+    } catch (e) {
+        console.error("Error saving study:", e);
+        alert("Error de conexión al guardar.");
     }
-
-    localStorage.setItem('endo_history', JSON.stringify(state.history));
-    renderHistory();
-    alert("Estudio guardado correctamente en el historial.");
 }
 
-function renderHistory(filter = "") {
+async function renderHistory(filter = "") {
     const body = document.getElementById('history-table-body');
     const emptyState = document.getElementById('history-empty-state');
     if(!body) return;
 
-    const filtered = state.history.filter(r => 
-        (r.patient.nombre && r.patient.nombre.toLowerCase().includes(filter.toLowerCase())) || 
-        (r.patient.dni && r.patient.dni.includes(filter))
-    );
+    const token = sessionStorage.getItem('endo_token');
+    if (!token) return;
 
-    if (filtered.length === 0) {
-        body.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
+    try {
+        const res = await fetch(`http://localhost:3000/studies?search=${encodeURIComponent(filter)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const records = await res.json();
+
+        if (records.length === 0) {
+            body.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        body.innerHTML = records.map((r) => {
+            const dateStr = new Date(r.date).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).split(',')[0];
+            return `
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px; font-size: 0.85rem;">${dateStr}</td>
+                <td style="padding: 12px; font-weight: 500;">${r.patient.nombre || 'Sin nombre'}</td>
+                <td style="padding: 12px; font-size: 0.85rem; color: var(--text-muted);">${r.patient.dni || '-'}</td>
+                <td style="padding: 12px; font-size: 0.85rem;">${r.metadata.indicacion || '-'}</td>
+                <td style="padding: 12px; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.diagnoses || '-'}</td>
+                <td style="padding: 12px; text-align: center; white-space: nowrap;">
+                    <button class="btn btn-icon" title="Ver Reporte" onclick="viewHistoryDetail('${r.id}')" style="color: var(--success); margin-right: 5px;"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede editar' : 'Cargar para Editar'}" onclick="loadFromHistory('${r.id}')" style="color: var(--primary); margin-right: 5px; opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede eliminar' : 'Eliminar'}" onclick="deleteFromHistory('${r.id}')" style="color: var(--danger); opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+        `}).join('');
+    } catch (e) {
+        console.error("Error fetching history:", e);
     }
-
-    emptyState.style.display = 'none';
-    body.innerHTML = filtered.map((r, index) => `
-        <tr style="border-bottom: 1px solid var(--border);">
-            <td style="padding: 12px; font-size: 0.85rem;">${r.date}</td>
-            <td style="padding: 12px; font-weight: 500;">${r.patient.nombre || 'Sin nombre'}</td>
-            <td style="padding: 12px; font-size: 0.85rem; color: var(--text-muted);">${r.patient.dni || '-'}</td>
-            <td style="padding: 12px; font-size: 0.85rem;">${r.metadata.indicacion || '-'}</td>
-            <td style="padding: 12px; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.diagnoses || '-'}</td>
-            <td style="padding: 12px; text-align: center; white-space: nowrap;">
-                <button class="btn btn-icon" title="Ver Reporte" onclick="viewHistoryDetail('${r.id}')" style="color: var(--success); margin-right: 5px;"><i class="fa-solid fa-eye"></i></button>
-                <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede editar' : 'Cargar para Editar'}" onclick="loadFromHistory('${r.id}')" style="color: var(--primary); margin-right: 5px; opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede eliminar' : 'Eliminar'}" onclick="deleteFromHistory('${r.id}')" style="color: var(--danger); opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-trash"></i></button>
-            </td>
-        </tr>
-    `).join('');
 }
 
 function viewHistoryDetail(id) {
     try {
-        loadFromHistory(id, true); // Load silently (full sync)
-        setTimeout(() => {
-            generateReport(true); // Show report preview after a tiny delay
-        }, 50);
+        loadFromHistory(id, true).then(() => {
+            setTimeout(() => {
+                generateReport(true); // Show report preview after a tiny delay
+            }, 50);
+        });
     } catch (e) {
         console.error("Error loading history:", e);
     }
 }
 
 
-function loadFromHistory(id, silent = false) {
-    const record = state.history.find(r => String(r.id) === String(id));
-    if(!record) {
-        alert("No se encontró el registro seleccionado.");
-        return;
-    }
+async function loadFromHistory(id, silent = false) {
+    const token = sessionStorage.getItem('endo_token');
+    if (!token) return;
 
     if(!silent) {
-        if(state.currentUser.role !== 'admin') {
+        if(state.currentUser?.role !== 'admin') {
             alert("Solo los administradores pueden editar estudios guardados.");
             return;
         }
@@ -1905,12 +1983,23 @@ function loadFromHistory(id, silent = false) {
     }
 
     try {
+        const res = await fetch(`http://localhost:3000/studies/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+            alert("No se encontró el registro seleccionado (o error de servidor).");
+            return;
+        }
+        
+        const record = await res.json();
+
         // 1. Restore State
-        state.currentStudyId = record.id;
-        state.patient = JSON.parse(JSON.stringify(record.patient));
-        state.clinical = JSON.parse(JSON.stringify(record.clinical));
-        state.metadata = JSON.parse(JSON.stringify(record.metadata));
-        state.quality = JSON.parse(JSON.stringify(record.quality));
+        state.currentStudyId = record.currentStudyId;
+        state.patient = JSON.parse(JSON.stringify(record.patient || {}));
+        state.clinical = JSON.parse(JSON.stringify(record.clinical || {}));
+        state.metadata = JSON.parse(JSON.stringify(record.metadata || {}));
+        state.quality = JSON.parse(JSON.stringify(record.quality || {}));
         state.findings = JSON.parse(JSON.stringify(record.findings || []));
         state.procedimientos = JSON.parse(JSON.stringify(record.procedimientos || []));
         state.images = JSON.parse(JSON.stringify(record.images || []));
@@ -2008,48 +2097,60 @@ function resetForm() {
 
 function filterHistory(val) { renderHistory(val); }
 
-function deleteFromHistory(id) {
-    if(state.currentUser.role !== 'admin') {
+async function deleteFromHistory(id) {
+    const token = sessionStorage.getItem('endo_token');
+    if (!token) return;
+
+    if(state.currentUser?.role !== 'admin') {
         alert("Solo los administradores pueden eliminar estudios.");
         return;
     }
     if(confirm("¿Eliminar este registro de forma permanente?")) {
-        state.history = state.history.filter(r => String(r.id) !== String(id));
-        localStorage.setItem('endo_history', JSON.stringify(state.history));
-        renderHistory();
+        try {
+            const res = await fetch(`http://localhost:3000/studies/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                renderHistory();
+            } else {
+                alert("Error al eliminar el estudio.");
+            }
+        } catch (e) {
+            console.error("Error deleting study:", e);
+        }
     }
 }
 
 function clearHistory() {
-    if(state.currentUser.role !== 'admin') return;
-    if(confirm("¿BORRAR TODO EL HISTORIAL? Esta acción no se puede deshacer.")) {
-        state.history = [];
-        localStorage.setItem('endo_history', JSON.stringify(state.history));
-        renderHistory();
-    }
+    alert("Por seguridad, la eliminación masiva (borrar todo) está deshabilitada. Puede eliminar los estudios individualmente si tiene permisos de administrador.");
 }
 
 function exportToCSV() {
-    if(state.history.length === 0) { alert("No hay datos para exportar."); return; }
-    const headers = ["ID", "Fecha", "Nombre", "DNI", "Edad", "Sexo", "Procedencia", "ASA", "Indicación", "Procedimientos", "Conclusión"];
-    const rows = state.history.map(r => [
-        r.id, 
-        r.date, 
-        r.patient.nombre, 
-        r.patient.dni, 
-        r.patient.edad, 
-        r.patient.sexo, 
-        `${r.patient.municipio || ''}, ${r.patient.departamento || ''}`,
-        r.clinical.asa, 
-        r.metadata.indicacion, 
-        (r.procedimientos || []).map(p => p.description).join(" | "),
-        (r.diagnoses || "").replace(/\n/g, " ")
-    ]);
-    let csv = "\uFEFF" + headers.join(";") + "\n";
-    rows.forEach(row => csv += row.map(cell => `"${cell || ''}"`).join(";") + "\n");
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `Endoscopia_Export_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+    const token = sessionStorage.getItem('endo_token');
+    if (!token) return;
+
+    if(state.currentUser?.role !== 'admin') {
+        alert("Solo los administradores pueden exportar el historial.");
+        return;
+    }
+
+    fetch('http://localhost:3000/studies/export/csv', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Error en servidor al exportar CSV");
+        return res.text();
+    })
+    .then(csv => {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Endoscopia_Export_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    })
+    .catch(e => {
+        console.error("Error exportando CSV:", e);
+        alert("Hubo un error al exportar como Excel.");
+    });
 }

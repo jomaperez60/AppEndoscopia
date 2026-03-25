@@ -1,0 +1,38 @@
+name: Daily PostgreSQL Backup
+
+on:
+  schedule:
+    # Ejecuta este workflow todos los días a las 2:00 AM (UTC)
+    - cron: '0 2 * * *'
+  # Permite ejecutar el backup manualmente desde la interfaz de GitHub
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install PostgreSQL Client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+
+    - name: Set current date as Env Var
+      run: echo "BACKUP_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+    - name: Dump Database
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        # Exporta la BD usando pg_dump en formato comprimido (Custom)
+        pg_dump "$DATABASE_URL" -F c > endo_backup_${{ env.BACKUP_DATE }}.dump
+
+    - name: Upload Backup as Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: db-backup-${{ env.BACKUP_DATE }}
+        path: endo_backup_${{ env.BACKUP_DATE }}.dump
+        retention-days: 90 # Se conservan hasta por 90 días en GitHub

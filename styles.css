@@ -68,6 +68,7 @@ body.login-active #app-container {
     transition: all 0.3s ease;
 }
 .logo { padding: 24px; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 12px; color: var(--primary); border-bottom: 1px solid var(--border); }
+.logo img { width: 32px; height: 32px; object-fit: contain; }
 .sidebar nav { padding: 16px 0; flex: 1; }
 .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; color: var(--text-muted); text-decoration: none; font-weight: 500; transition: all 0.2s ease; }
 .nav-item:hover { background-color: rgba(255, 255, 255, 0.05); color: var(--text-main); }

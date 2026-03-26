@@ -5,14 +5,44 @@ function handleImageUpload(e) {
     files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (event) => {
-            state.images.push({
-                data: event.target.result,
-                x1: null, y1: null, // Label position
-                x2: null, y2: null, // Target position
-                label: 'Sin etiqueta',
-                id: Date.now() + Math.random()
-            });
-            renderGallery();
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 900;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= Math.round(MAX_WIDTH / width);
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= Math.round(MAX_HEIGHT / height);
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Comprimir a JPEG con calidad al 70%
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                state.images.push({
+                    data: compressedDataUrl,
+                    x1: null, y1: null, // Label position
+                    x2: null, y2: null, // Target position
+                    label: 'Sin etiqueta',
+                    id: Date.now() + Math.random()
+                });
+                renderGallery();
+            };
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     });

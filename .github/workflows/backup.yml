@@ -32,7 +32,7 @@ jobs:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
         # Exporta la BD usando pg_dump en formato comprimido (Custom)
-        pg_dump "$DATABASE_URL" -F c > endo_backup_${{ env.BACKUP_DATE }}.dump
+        /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" -F c > endo_backup_${{ env.BACKUP_DATE }}.dump
 
     - name: Upload Backup as Artifact
       uses: actions/upload-artifact@v4

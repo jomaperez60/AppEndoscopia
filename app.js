@@ -1515,48 +1515,78 @@ function formatClinicalNarrative(organ, findings) {
     if (findings.length === 0) {
         switch (organ) {
             case 'Esófago':
-                return "Esófago de morfología, calibre y distensibilidad normales. Mucosa de aspecto sonrosado, lisa y brillante, con trama vascular conservada. Unión esofagogástrica coincidente con la pinza diafragmática, sin evidencia de lesiones ni estigmas de sangrado.";
+                return "Esófago de morfología, calibre y distensibilidad normales. Mucosa de aspecto sonrosado, lisa y brillante, con trama vascular conservada. La unión esofagogástrica coincide con la pinza diafragmática, sin evidencia de lesiones ni estigmas de sangrado.";
             case 'Estómago':
-                return "Estómago con lago gástrico de contenido claro y cantidad habitual. Morfología y distensibilidad conservadas a la insuflación. Pliegues gástricos de trayecto y grosor normal. Mucosa de fondo, cuerpo y antro de características endoscópicas normales. Píloro céntrico, circular y franqueable.";
+                return "Estómago con lago gástrico de contenido claro y cantidad habitual. Morfología y distensibilidad conservadas a la insuflación. Pliegues gástricos de trayecto y grosor normal. La mucosa del fondo, cuerpo y antro es de características endoscópicas normales. El píloro se observa céntrico, circular y franqueable.";
             case 'Duodeno':
-                return "Bulbo duodenal y segunda porción duodenal de morfología normal. Mucosa íntegra, de aspecto aterciopelado sin evidencia de soluciones de continuidad ni lesiones protruyentes.";
+                return "El bulbo duodenal y la segunda porción duodenal presentan morfología normal. La mucosa está íntegra, con el habitual aspecto aterciopelado, sin evidencia de soluciones de continuidad ni lesiones protruyentes.";
             case 'Yeyuno':
-                return "Segmentos de yeyuno explorados sin evidencia de alteraciones. Morfología, distensibilidad y mucosa de características endoscópicas normales.";
+                return "Segmentos de yeyuno explorados sin evidencia de alteraciones anatómicas. Morfología, distensibilidad y mucosa de características endoscópicas normales.";
             case 'Exploración':
-                return "Procedimiento realizado sin complicaciones técnicas. Extensión del examen satisfactoria según el objetivo clínico. Preparación de la mucosa adecuada que permite una valoración diagnóstica óptima.";
+                return "El procedimiento se realizó sin demoras ni complicaciones técnicas. La extensión del examen fue satisfactoria en relación al objetivo clínico. Además, la preparación de la mucosa fue óptima, permitiendo una valoración diagnóstica nítida y completa.";
             default:
                 return "De características endoscópicas normales.";
         }
     }
 
-    // Contextual phrasing for findings
+    // Dynamic phrasing for pathology
     let intro = "";
     switch (organ) {
-        case 'Esófago': intro = "Esófago con distensibilidad conservada, sin embargo, "; break;
-        case 'Estómago': intro = "Estómago con lago mucoso de características normales. Durante la exploración "; break;
-        case 'Duodeno': intro = "Duodeno explorado bajo visión directa; "; break;
-        case 'Yeyuno': intro = "Yeyuno explorado mediante visión luminal; "; break;
-        case 'Exploración': intro = "En cuanto a los límites y condiciones del estudio, "; break;
+        case 'Esófago': intro = "El esófago conserva su distensibilidad habitual; sin embargo, "; break;
+        case 'Estómago': intro = "En el estómago se observa un lago mucoso normal, destacando que durante la intubación "; break;
+        case 'Duodeno': intro = "En la exploración del duodeno bajo visión directa, "; break;
+        case 'Yeyuno': intro = "A nivel del yeyuno, evaluado mediante visión luminal, "; break;
+        case 'Exploración': intro = "En cuanto a los límites y hallazgos técnicos del estudio endoscópico, "; break;
     }
 
-    const findingSentences = findings.map(f => {
+    const verbs = [
+        "se evidencia", 
+        "se identifica claramente", 
+        "se observa", 
+        "se aprecia", 
+        "llama la atención la presencia de"
+    ];
+
+    const connectors = [
+        "; adicionalmente, ", 
+        ". Asimismo, ", 
+        "; por otra parte, ", 
+        ". También "
+    ];
+
+    const sentences = findings.map((f, idx) => {
         const loc = f.location;
         const desc = cleanMstString(f.description);
         
         if (!desc) return null;
 
+        const verb = verbs[idx % verbs.length];
+        
         if (loc === 'General' || loc === 'Totalidad del órgano' || loc === 'Totalidad del esófago' || loc === 'Totalidad del estómago') {
-            return `se evidencia ${desc}`;
+            return `${verb} ${desc}`;
         }
-        return `a nivel de ${loc} se aprecia ${desc}`;
+        
+        if (idx % 2 === 0) {
+            return `a nivel de ${loc.toLowerCase()} ${verb} ${desc}`;
+        } else {
+            return `${verb} ${desc} localizándose específicamente en ${loc.toLowerCase()}`;
+        }
     }).filter(s => s !== null);
 
-    if (findingSentences.length === 0) return formatClinicalNarrative(organ, []);
+    if (sentences.length === 0) return formatClinicalNarrative(organ, []);
 
-    let combined = intro + findingSentences.join("; adicionalmente ") + ".";
+    let combined = intro;
+    for (let i = 0; i < sentences.length; i++) {
+        combined += sentences[i];
+        if (i < sentences.length - 1) {
+            combined += connectors[i % connectors.length];
+        } else {
+            combined += ".";
+        }
+    }
     
-    // Final polish: remove double spaces and fix capitalization
-    combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.');
+    // Smooth out any syntax glitches
+    combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.').replace(/, ,/g, ',');
     return combined.charAt(0).toUpperCase() + combined.slice(1);
 }
 
@@ -1573,7 +1603,6 @@ function formatProceduresNarrative(procedimientos) {
             fullDesc = parts.slice(1).join(': ').trim();
         }
         
-        // Remove structural labels and internal separators
         let items = fullDesc.split(' - ').map(s => s.trim()).filter(s => {
             const sl = s.toLowerCase();
             return sl !== 'diagnósticos' && sl !== 'terapéuticos';
@@ -1584,8 +1613,9 @@ function formatProceduresNarrative(procedimientos) {
         let procName = items[0];
         let attributes = items.slice(1);
         
-        let subLoc = "";
-        let details = [];
+        let subLoc = "la lesión";
+        let method = "";
+        let purpose = "";
         let result = "";
 
         attributes.forEach(attr => {
@@ -1593,72 +1623,58 @@ function formatProceduresNarrative(procedimientos) {
                 let [label, value] = attr.split(':').map(s => s.trim());
                 let l = label.toLowerCase();
                 let v = value.toLowerCase();
-                
-                if (v === '' || v === '(especificar)') return; // Skip empty/placeholder values
+                if (v === '' || v === '(especificar)') return;
 
-                if (l === 'lugar(es)') subLoc = value;
-                else if (l === 'resultado') result = value;
-                else if (l === 'espécimen') details.push('para ' + v);
-                else if (l === 'método' || l === 'instrumento' || l === 'tipo' || l === 'colorante') details.push(v);
-                else if (v !== 'no' && v !== 'si') details.push(`${l} ${v}`);
-                else if (v === 'si') details.push(l);
+                if (l === 'lugar(es)' && v) subLoc = value.toLowerCase();
+                else if (l === 'resultado') result = value.toLowerCase();
+                else if (l === 'espécimen' || l === 'objetivo') purpose = `obteniendo muestras para enviar a ${v}`;
+                else if (l === 'método' || l === 'instrumento' || l === 'tipo') method = `mediante el uso de ${v}`;
+                else if (l === 'colorante') method = `utilizando técnica de cromoendoscopia con ${v}`;
             } else {
-                let v = attr.trim();
-                let vL = v.toLowerCase();
-                if (v && vL !== '(especificar)' && vL !== 'sí' && vL !== 'no') details.push(vL);
+                let v = attr.trim().toLowerCase();
+                if (v && v !== '(especificar)' && v !== 'sí' && v !== 'no') {
+                    if (!method) method = `utilizando técnica ${v}`;
+                }
             }
         });
 
         let sentence = "";
         const nameL = procName.toLowerCase();
-        if (nameL.includes('gastrostomía')) {
-            sentence = "se colocó sonda de gastrostomía percutánea";
-        } else if (nameL.includes('biopsia')) {
-            sentence = "se realizó biopsia";
-        } else if (nameL.includes('polipectomia')) {
-            sentence = "se realizó polipectomía";
-        } else if (nameL.includes('dilatación')) {
-            sentence = "se realizó dilatación";
-        } else if (nameL.includes('ligadura')) {
-            sentence = "se realizó ligadura";
-        } else if (nameL.includes('inyección')) {
-            sentence = "se realizó inyección";
-        } else {
-            sentence = `se realizó ${nameL}`;
-        }
-
-        if (subLoc && subLoc.toLowerCase() !== '(especificar)') {
-            sentence += ` en ${subLoc}`;
-        }
         
-        let validDetails = details.filter(d => {
-            if (!d || d.trim().length === 0) return false;
-            // Deduplicate: if the detail is already in the sentence (e.g. 'percutánea'), skip it
-            if (sentence.toLowerCase().includes(d.toLowerCase())) return false;
-            return true;
-        });
-
-        // Better wording for common phrases
-        validDetails = validDetails.map(d => {
-            if (d.startsWith('forma extracción ')) return d.replace('forma extracción ', 'de extracción ');
-            return d;
-        });
-
-        if (validDetails.length > 0) {
-            sentence += ` con ${validDetails.join(' ')}`;
+        // Fluid Medical Phrasing
+        if (nameL.includes('biopsia')) {
+            sentence = `se efectuó la toma de biopsias dirigidas a nivel de ${subLoc}`;
+            if (method) sentence += ` ${method}`;
+            if (purpose) sentence += `, ${purpose}`;
+        } else if (nameL.includes('polipectomía') || nameL.includes('polipectomia')) {
+            sentence = `se procedió a realizar una polipectomía de ${subLoc}`;
+            if (method) sentence += ` ${method}`;
+            if (purpose) sentence += `, ${purpose}`;
+            else sentence += `, enviando la pieza a anatomía patológica`;
+        } else if (nameL.includes('gastrostomía')) {
+            sentence = `se instaló exitosamente una sonda de gastrostomía endoscópica percutánea`;
+            if (method) sentence += ` ${method}`;
+        } else {
+            sentence = `se ejecutó el procedimiento de ${nameL} en ${subLoc}`;
+            if (method) sentence += ` ${method}`;
+            if (purpose) sentence += ` con el fin de obtener muestras para ${purpose}`;
         }
 
-        if (result && result.toLowerCase() !== '(especificar)') {
-            let rL = result.toLowerCase();
-            if (rL.includes('satisfactorio') || rL.includes('satisfactoria')) {
-                sentence += ` de manera satisfactoria`;
+        if (result && result !== '(especificar)') {
+            if (result.includes('satisfactori')) {
+                sentence += `, culminando el procedimiento de forma satisfactoria y sin sangrado activo residual`;
             } else {
-                sentence += ` con resultado ${rL}`;
+                sentence += `, logrando un resultado ${result}`;
+            }
+        } else {
+            // Default positive outcome for therapeutic procedures
+            if (!nameL.includes('biopsia') && !nameL.includes('gastrostomía')) {
+                sentence += `, sin evidencia de complicaciones inmediatas`;
             }
         }
 
         if (organLoc && organLoc !== 'General') {
-            return `en ${organLoc.toLowerCase()} ${sentence}`;
+            return `A nivel de ${organLoc.toLowerCase()}, ${sentence}`;
         }
         return sentence;
     }).filter(s => s !== null);
@@ -1669,13 +1685,14 @@ function formatProceduresNarrative(procedimientos) {
     if (sentences.length === 1) {
         narrative = sentences[0];
     } else if (sentences.length === 2) {
-        narrative = sentences.join(" y ");
+        narrative = sentences.join("; posterior a ello, ");
     } else {
         const last = sentences.pop();
-        narrative = sentences.join(", ") + " y " + last;
+        narrative = sentences.join("; ") + "; y en una última instancia, " + last;
     }
     
-    let combined = "Durante la endoscopia " + narrative + ".";
+    let combined = narrative + ".";
+    // Polish
     combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.').replace(/ ,/g, ',');
     return combined.charAt(0).toUpperCase() + combined.slice(1);
 }

@@ -479,7 +479,7 @@ function renderDiagnosesLevel(dataObj, container, level) {
         const keys = Object.keys(dataObj);
         const isMulti = keys.length > 1 && keys.every(k => Array.isArray(dataObj[k]) || (typeof dataObj[k] === 'object' && Object.keys(dataObj[k]).length === 0));
         
-        if (isMulti) {
+        if (isMulti && level >= 3) {
             renderDiagnosesAttributeGroups(dataObj, container, level);
             return;
         }

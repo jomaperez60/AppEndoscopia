@@ -6,7 +6,7 @@ const mstTree = {
             'Estenosis': {
                 'Aspecto': ['Extrínseca', 'Benigna intrínseca', 'Maligna intrínseca'],
                 'Longitud (cm)': ['(especificar)'],
-                'Sobrepable': ['Si', 'Tras dilatación', 'No']
+                'Sobrepasable': ['Si', 'Tras dilatación', 'No']
             },
             'Compresión Extrínseca': {
                 'Tamaño': ['Pequeña', 'Grande']
@@ -105,7 +105,7 @@ const mstTree = {
                 'Erosión': {
                     'Número': ['Única', 'Pocas', 'Muchos']
                 },
-                'Ulcera': {
+                'Úlcera': {
                     'Tamaño (mm)': ['(especificar)'],
                     'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
                     'Estigmas de sangrado': ['Si', 'No']
@@ -225,7 +225,7 @@ const mstTree = {
             'Granuloma por sutura': []
         },
         'Lesiones Excavadas': {
-            'Ulcera Gástrica': {
+            'Úlcera Gástrica': {
                 'Clasificación Forrest': ['Ia (Chorro)', 'Ib (Babeante)', 'IIa (Vaso visible)', 'IIb (Coágulo)', 'IIc (Mancha)', 'III (Base limpia)'],
                 'Tamaño (mm)': ['(especificar)'],
                 'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No']
@@ -294,7 +294,7 @@ const mstTree = {
             },
             'Angioectasia': {
                 'Número': ['Única', 'Pocas', 'Múltiples'],
-                'Extensión': ['Localizada', 'Parcheada', 'Difusas'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
                 'Sangrado': ['Si', 'No'],
                 'Estigmas': ['Si', 'No']
             }
@@ -316,11 +316,11 @@ const mstTree = {
         'Lesiones Excavadas': {
             'Erosión': {
                 'Número': ['Única', 'Pocas', 'Múltiples'],
-                'Extensión': ['Localizada', 'Segmentarias', 'Difusa'],
+                'Extensión': ['Localizada', 'Segmentaria', 'Difusa'],
                 'Sangrado': ['Si', 'No'],
                 'Estigmas': ['Si', 'No']
             },
-            'Ulcera': {
+            'Úlcera': {
                 'Número': ['(especificar)'],
                 'Tamaño': ['(especificar diámetro mayor en mm)'],
                 'Forma': ['Superficial', 'Crateriforme', 'Lineal'],
@@ -393,7 +393,7 @@ const mstTree = {
             },
             'Angioectasia': {
                 'Número': ['Única', 'Pocas', 'Múltiples'],
-                'Extensión': ['Localizada', 'Parcheada', 'Difusas'],
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
                 'Sangrado': ['Si', 'No'],
                 'Estigmas': ['Si', 'No']
             }
@@ -415,11 +415,11 @@ const mstTree = {
         'Lesiones Excavadas': {
             'Erosión': {
                 'Número': ['Única', 'Pocas', 'Múltiples'],
-                'Extensión': ['Localizada', 'Segmentarias', 'Difusa'],
+                'Extensión': ['Localizada', 'Segmentaria', 'Difusa'],
                 'Sangrado': ['Si', 'No'],
                 'Estigmas': ['Si', 'No']
             },
-            'Ulcera': {
+            'Úlcera': {
                 'Número': ['(especificar)'],
                 'Tamaño': ['(especificar diámetro mayor en mm)'],
                 'Forma': ['Superficial', 'Crateriforme', 'Lineal'],
@@ -480,7 +480,7 @@ const mstTree = {
             'Colangioscopia': { 'Tipo': ['(especificar)'] },
             'Ultrasonografía endoscópica': { 'Tipo': ['(especificar)'] },
             'Extracción de cuerpo extraño': { 'Tipo': ['(especificar)'] },
-            'Polipectomia': {
+            'Polipectomía': {
                 'Lugar(es)': ['(especificar)'],
                 'Instrumento': ['Pinza', 'Asa'],
                 'Método': ['Fría', 'Caliente'],
@@ -500,7 +500,7 @@ const mstTree = {
                 'Tipo': ['(especificar)'],
                 'Resultado': ['Satisfactoria', 'Insatisfactoria']
             },
-            'Quistostomia': {
+            'Quistostomía': {
                 'Tipo': ['Transgástrica', 'Transduodenal']
             },
             'Colocación de hilo-guía': {
@@ -651,11 +651,11 @@ const diagnosesTree = {
             'Estenosis benigna': diagAttrs,
             'Tumor maligno': diagAttrs,
             'Esófago de Barrett': diagAttrs,
-            'Ulcera': diagAttrs
+            'Úlcera': diagAttrs
         },
         'Otros diagnósticos': [
             'Acalasia', 'Tumor benigno', 'Divertículo', 'Fístula', 'Cuerpo Extraño', 
-            'Hernia de hiato', 'Síndrome de Mallory-Weiss', 'Esofagitis por cándidas', 
+            'Hernia de hiato', 'Síndrome de Mallory-Weiss', 'Esofagitis candidíásica', 
             'Esofagitis sin reflujo', 'Pólipo', 'Aspecto Post-quirúrgico', 
             'Aspecto post-escleroterapia', 'Cicatriz', 'Anillo de Schatzki', 'Tumor submucoso'
         ]
@@ -663,24 +663,24 @@ const diagnosesTree = {
     'Estómago': {
         'Diagnóstico principal': {
             'Normal': [],
-            'Gastropatías Erosiva': diagAttrs,
-            'Gastropatía Eritematosa (hiperémica)': diagAttrs,
+            'Gastropatía Erosiva': diagAttrs,
+            'Gastropatía Eritematosa (Hiperémica)': diagAttrs,
             'Gastropatía Hipertrófica': diagAttrs,
             'Gastropatía Hemorrágica': diagAttrs,
             'Mucosa gástrica atrófica': diagAttrs,
             'Sospecha de gastritis': diagAttrs,
             'Gastropatía de la hipertensión portal': diagAttrs,
-            'Ulcera gástrica': diagAttrs,
-            'Ulcera gástrica sangrante': {
+            'Úlcera gástrica': diagAttrs,
+            'Úlcera gástrica sangrante': {
                 'Atributos Generales': diagAttrs,
                 'Clasificación de Forrest': forrestAttrs
             },
-            'Ulcera anastomótica': diagAttrs,
+            'Úlcera anastomótica': diagAttrs,
             'Tumor maligno (especificar)': diagAttrs,
             'Pólipos': diagAttrs
         },
         'Otros diagnósticos': [
-            'Angiectasia', 'Tumor benigno', 'Sangrado de origen desconocido', 
+            'Angioectasia', 'Tumor benigno', 'Sangrado de origen desconocido', 
             'Anomalía vascular de Dieulafoy', 'Divertículo', 'Cáncer gástrico precoz', 
             'Compresión extrínseca', 'Fístula', 'Cuerpo Extraño', 'Retención gástrica', 
             'Helicobacter pylori', 'Gastropatía papulosa', 'Parásitos', 
@@ -694,15 +694,15 @@ const diagnosesTree = {
             'Duodenopatía Eritematosa (Hiperémica)': diagAttrs,
             'Duodenopatía Congestiva': diagAttrs,
             'Duodenopatía Hemorrágica': diagAttrs,
-            'Ulcera duodenal': diagAttrs,
-            'Ulcera duodenal sangrante': {
+            'Úlcera duodenal': diagAttrs,
+            'Úlcera duodenal sangrante': {
                 'Atributos Generales': diagAttrs,
                 'Clasificación de Forrest': forrestAttrs
             },
             'Deformidad ulcerogénica del duodeno': diagAttrs
         },
         'Otros diagnósticos': [
-            'Angiectasia', 'Tumor benigno de origen desconocido', 
+            'Angioectasia', 'Tumor benigno de origen desconocido', 
             'Hiperplasia de glándulas de Brunner', 'Enfermedad celíaca', 
             'Enfermedad de Crohn', 'Divertículo', 'Fístula', 'Tumor maligno', 
             'Parásitos', 'Pólipo(s)', 'Cambios Post-quirúrgicos', 'Cicatriz', 

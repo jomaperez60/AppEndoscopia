@@ -1,9 +1,9 @@
 {
   "name": "endoreport-cloud",
   "version": "1.0.0",
-  "main": "backend/index.js",
   "scripts": {
-    "start": "node backend/index.js",
+    "start": "cd backend && node index.js",
+    "build": "cd backend && npm install",
     "install": "cd backend && npm install"
   },
   "engines": {

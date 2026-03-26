@@ -1,0 +1,8 @@
+[build]
+  command = "cd backend && npm install"
+  functions = "backend"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/index"
+  status = 200

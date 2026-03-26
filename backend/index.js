@@ -1,3 +1,4 @@
+const serverless = require('serverless-http');
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
@@ -360,4 +361,6 @@ if (require.main === module) {
   app.listen(PORT, () => console.log(`Backend server running on port ${PORT}`));
 }
 
+// Export for Vercel/Netlify Serverless Functions
 module.exports = app;
+module.exports.handler = serverless(app);

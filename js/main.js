@@ -54,6 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const planEl = document.getElementById('plan');
+    if(planEl) planEl.addEventListener('input', (e) => state.plan = e.target.value);
+    
+    const diagFinalEl = document.getElementById('diag-final');
+    if(diagFinalEl) diagFinalEl.addEventListener('input', (e) => state.metadata.diagFinal = e.target.value);
+
     const deptoSelect = document.getElementById('paciente-departamento');
     const muniSelect = document.getElementById('paciente-municipio');
     

@@ -176,7 +176,10 @@ async function loadFromHistory(id, silent = false) {
             deptoSelect.dispatchEvent(new Event('change'));
             setTimeout(() => {
                 const muniSelect = document.getElementById('paciente-municipio');
-                if(muniSelect) muniSelect.value = state.patient.municipio || '';
+                if(muniSelect) {
+                    muniSelect.value = record.patient.municipio || '';
+                    state.patient.municipio = record.patient.municipio || '';
+                }
             }, 50);
         }
 

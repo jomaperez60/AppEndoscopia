@@ -1,5 +1,6 @@
 const mstTree = {
     'Esófago': {
+        'Normal': [],
         'Luz': {
             'Normal': [],
             'Dilatada': [],
@@ -115,6 +116,7 @@ const mstTree = {
         'Otros': ['Cicatriz', 'Divertículo', 'Fístula']
     },
     'Estómago': {
+        'Normal': [],
         'Luz': {
             'Normal': [],
             'Estenosis': {

@@ -32,9 +32,26 @@ const authMiddleware = async (req, res, next) => {
 // ==========================================
 app.post('/auth/login', async (req, res) => {
   const { username, password } = req.body;
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+
   try {
+    // 1. Rate Limiting Check
+    const attemptsResult = await db.query(
+      "SELECT count(*) FROM audit_log WHERE action = 'FAILED_LOGIN' AND created_at > NOW() - INTERVAL '15 minutes' AND metadata->>'ip' = $1",
+      [ip]
+    );
+    if (parseInt(attemptsResult.rows[0].count) >= 5) {
+      return res.status(429).json({ 
+        error: 'Demasiados intentos fallidos. Por protección de fuerza bruta, intente de nuevo en 15 minutos.' 
+      });
+    }
+
     const userResult = await db.query('SELECT * FROM users WHERE username = $1', [username]);
     if (userResult.rows.length === 0) {
+      await db.query(
+        "INSERT INTO audit_log (action, entity_type, entity_id, metadata) VALUES ('FAILED_LOGIN', 'system', 'login', $1)",
+        [JSON.stringify({ ip, username })]
+      );
       return res.status(401).json({ error: 'Invalid username or password' });
     }
     
@@ -42,16 +59,20 @@ app.post('/auth/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.password_hash);
     
     if (!match) {
+      await db.query(
+        "INSERT INTO audit_log (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, 'FAILED_LOGIN', 'user', $2, $3)",
+        [user.id, user.id, JSON.stringify({ ip, username })]
+      );
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const tokenPayload = { id: user.id, username: user.username, role: user.role, avatar: user.avatar };
-    const token = jsonwebtoken.sign(tokenPayload, JWT_SECRET, { expiresIn: '12h' });
+    const token = jsonwebtoken.sign(tokenPayload, JWT_SECRET, { expiresIn: '8h' });
     
-    // Log audit
+    // Log audit successful
     await db.query(
       'INSERT INTO audit_log (actor_user_id, action, entity_type, entity_id, metadata) VALUES ($1, $2, $3, $4, $5)',
-      [user.id, 'LOGIN', 'user', user.id, JSON.stringify({ ip: req.ip })]
+      [user.id, 'LOGIN', 'user', user.id, JSON.stringify({ ip })]
     );
 
     res.json({ token, user: tokenPayload });

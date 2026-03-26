@@ -2154,3 +2154,22 @@ function exportToCSV() {
         alert("Hubo un error al exportar como Excel.");
     });
 }
+
+// --- Idle Timeout Security ---
+let idleTimeout;
+const IDLE_TIME_MS = 15 * 60 * 1000; // 15 minutos
+
+function resetIdleTimeout() {
+    if (!sessionStorage.getItem('endo_token')) return;
+    clearTimeout(idleTimeout);
+    idleTimeout = setTimeout(() => {
+        alert("Tu sesión ha sido cerrada automáticamente por inactividad (15 minutos). Por seguridad, vuelve a ingresar.");
+        handleLogout();
+    }, IDLE_TIME_MS);
+}
+
+// Escuchar eventos de interacción
+['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, resetIdleTimeout);
+});
+resetIdleTimeout();

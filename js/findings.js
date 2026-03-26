@@ -103,7 +103,7 @@ function renderMstLevel(dataObj, container, level) {
         if (item.toLowerCase().includes('(especificar)')) {
             const specDiv = document.createElement('div');
             specDiv.className = 'spec-container';
-            specDiv.style.cssText = 'margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px;';
+            specDiv.style.cssText = 'margin-top: 12px; padding: 12px; background: rgba(0,0,0,0.05); border: 1px solid var(--border); border-radius: 6px;';
             specDiv.innerHTML = `
                 <label style="display:block; margin-bottom: 6px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">DETALLE ADICIONAL:</label>
                 <input type="text" placeholder="Escriba el detalle aquí..." 
@@ -177,7 +177,7 @@ function renderAttributeGroups(dataObj, container, level) {
                     if (opt.toLowerCase().includes('(especificar)')) {
                         const specDiv = document.createElement('div');
                         specDiv.className = 'spec-container';
-                        specDiv.style.cssText = 'margin-top: 8px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 4px;';
+                        specDiv.style.cssText = 'margin-top: 8px; padding: 10px; background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: 4px;';
                         specDiv.innerHTML = `<input type="text" placeholder="Detalle..." style="width: 100%; padding: 6px 10px; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px;" oninput="updateMstMultiSpec(${level}, '${groupKey}', '${opt}', this.value)">`;
                         groupDiv.appendChild(specDiv);
                     }
@@ -267,7 +267,7 @@ function updateProcedimientosList() {
     state.procedimientos.forEach((proc, idx) => {
         const div = document.createElement('div');
         div.className = 'finding-item';
-        div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;';
+        div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px;';
         
         const content = document.createElement('div');
         content.innerHTML = `<span style="color: var(--primary); font-weight: 600; margin-right: 10px;">PRO:</span> <span>${proc.description}</span>`;

@@ -1,6 +1,6 @@
 {
-  "name": "EndoReport - Reporte Endoscópico",
-  "short_name": "EndoReport",
+  "name": "EndoHn - Reporte Endoscópico",
+  "short_name": "EndoHn",
   "description": "Sistema de estandarización de reportes de endoscopia (MST 3.0)",
   "start_url": "./index.html",
   "display": "standalone",

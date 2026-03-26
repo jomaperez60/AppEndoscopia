@@ -333,7 +333,7 @@ function generateReport(skipSave = false) {
             </div>
             
             <div style="margin-top: 40px; font-size: 0.75rem; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
-                Generado por Sistema de Reportes EndoReport - Documentación Médica Digital
+                Generado por Sistema de Reportes EndoHn - Documentación Médica Digital &copy; Jorge Suazo
             </div>
         </div>`;
 

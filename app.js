@@ -261,7 +261,7 @@ async function handleLogin() {
     const errorEl = document.getElementById('login-error');
 
     try {
-        const response = await fetch('http://localhost:3000/auth/login', {
+        const response = await fetch('https://endohn.netlify.app/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, password: pass })
@@ -306,7 +306,7 @@ async function renderUsers() {
     if (!token) return;
 
     try {
-        const res = await fetch('http://localhost:3000/users', {
+        const res = await fetch('https://endohn.netlify.app/users', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) return;
@@ -345,7 +345,7 @@ async function saveNewUser() {
 
     const token = sessionStorage.getItem('endo_token');
     try {
-        const res = await fetch('http://localhost:3000/users', {
+        const res = await fetch('https://endohn.netlify.app/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ username: user, password: pass, role })
@@ -368,7 +368,7 @@ async function deleteUser(username) {
     if (confirm(`¿Está seguro de eliminar al usuario ${username}?`)) {
         const token = sessionStorage.getItem('endo_token');
         try {
-            const res = await fetch(`http://localhost:3000/users/${username}`, {
+            const res = await fetch(`https://endohn.netlify.app/users/${username}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -395,7 +395,7 @@ async function handleChangePassword() {
 
     const token = sessionStorage.getItem('endo_token');
     try {
-        const res = await fetch(`http://localhost:3000/users/${userToPasswordChange}/password`, {
+        const res = await fetch(`https://endohn.netlify.app/users/${userToPasswordChange}/password`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ newPassword: newPass })
@@ -1890,7 +1890,7 @@ async function saveToHistory() {
     };
 
     try {
-        const res = await fetch('http://localhost:3000/studies', {
+        const res = await fetch('https://endohn.netlify.app/studies', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1924,7 +1924,7 @@ async function renderHistory(filter = "") {
     if (!token) return;
 
     try {
-        const res = await fetch(`http://localhost:3000/studies?search=${encodeURIComponent(filter)}`, {
+        const res = await fetch(`https://endohn.netlify.app/studies?search=${encodeURIComponent(filter)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const records = await res.json();
@@ -1983,7 +1983,7 @@ async function loadFromHistory(id, silent = false) {
     }
 
     try {
-        const res = await fetch(`http://localhost:3000/studies/${id}`, {
+        const res = await fetch(`https://endohn.netlify.app/studies/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -2107,7 +2107,7 @@ async function deleteFromHistory(id) {
     }
     if(confirm("¿Eliminar este registro de forma permanente?")) {
         try {
-            const res = await fetch(`http://localhost:3000/studies/${id}`, {
+            const res = await fetch(`https://endohn.netlify.app/studies/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -2135,7 +2135,7 @@ function exportToCSV() {
         return;
     }
 
-    fetch('http://localhost:3000/studies/export/csv', {
+    fetch('https://endohn.netlify.app/studies/export/csv', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => {

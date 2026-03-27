@@ -83,6 +83,7 @@ async function renderHistory(filter = "") {
                 <td style="padding: 12px; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.diagnoses || '-'}</td>
                 <td style="padding: 12px; text-align: center; white-space: nowrap;">
                     <button class="btn btn-icon" title="Ver Reporte" onclick="viewHistoryDetail('${r.id}')" style="color: var(--success); margin-right: 5px;"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn btn-icon" title="Nuevo Estudio (Mismo Paciente)" onclick="newStudyFromHistory('${r.id}')" style="color: var(--warning); margin-right: 5px;"><i class="fa-solid fa-user-plus"></i></button>
                     <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede editar' : 'Cargar para Editar'}" onclick="loadFromHistory('${r.id}')" style="color: var(--primary); margin-right: 5px; opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button class="btn btn-icon ${state.currentUser?.role !== 'admin' ? 'disabled' : ''}" title="${state.currentUser?.role !== 'admin' ? 'Solo administrador puede eliminar' : 'Eliminar'}" onclick="deleteFromHistory('${r.id}')" style="color: var(--danger); opacity: ${state.currentUser?.role !== 'admin' ? '0.5' : '1'}; cursor: ${state.currentUser?.role !== 'admin' ? 'not-allowed' : 'pointer'};"><i class="fa-solid fa-trash"></i></button>
                 </td>
@@ -255,4 +256,79 @@ function exportToCSV() {
         console.error("Error exportando CSV:", e);
         alert("Hubo un error al exportar como Excel.");
     });
+}
+
+async function newStudyFromHistory(id) {
+    const token = sessionStorage.getItem('endo_token');
+    if (!token) return;
+
+    if(!confirm("¿Desea crear un nuevo estudio clínico para este paciente? Su información personal se copiará a un formulario nuevo y en blanco.")) return;
+
+    try {
+        const res = await fetch(`https://endohn.netlify.app/studies/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+            alert("Error al cargar datos del paciente.");
+            return;
+        }
+        
+        const record = await res.json();
+
+        // Limpiar estado preparándolo para un nuevo estudio, preservando datos demográficos
+        state.currentStudyId = null; // IMPORTANTE: Null asegura que sea un registro nuevo
+        state.patient = JSON.parse(JSON.stringify(record.patient || {}));
+        state.clinical = { referente: '', asa: 'I', anticoagulante: 'No', preparacion: 'Buena' };
+        state.metadata = { indicacion: '', sedacion: '', instrumento: '', extension: '' };
+        state.quality = { consentimiento: 'Si', fotos: 'Si', completa: 'Si', tiempo: '> 6 min' };
+        state.findings = [];
+        state.procedimientos = [];
+        state.images = [];
+        state.plan = '';
+
+        // Limpiar inputs de la UI
+        const fieldsToClear = ['clinico-referente', 'indicacion', 'sedacion', 'instrumento', 'extension', 'diag-final', 'plan'];
+        fieldsToClear.forEach(fid => {
+            const el = document.getElementById(fid);
+            if(el) el.value = '';
+        });
+
+        // Poblar datos personales
+        const fieldMap = {
+            'paciente-nombre': state.patient.nombre,
+            'paciente-dni': state.patient.dni,
+            'paciente-fnacimiento': state.patient.fnacimiento,
+            'paciente-sexo': state.patient.sexo,
+            'paciente-antecedentes': state.patient.antecedentes
+        };
+
+        Object.keys(fieldMap).forEach(key => {
+            const el = document.getElementById(key);
+            if(el) el.value = fieldMap[key] || '';
+        });
+
+        const deptoSelect = document.getElementById('paciente-departamento');
+        if(deptoSelect && state.patient.departamento) {
+            deptoSelect.value = state.patient.departamento;
+            deptoSelect.dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                const muniSelect = document.getElementById('paciente-municipio');
+                if(muniSelect) muniSelect.value = state.patient.municipio || '';
+            }, 50);
+        }
+
+        // Resetear visuales
+        updateTopbar();
+        updateFindingsList();
+        updateProcedimientosList();
+        renderGallery();
+        document.getElementById('current-diag-preview').innerText = '';
+        
+        if(typeof switchMainView === 'function') switchMainView('new');
+        
+    } catch (e) {
+        console.error("Error creating new study from patient:", e);
+        alert("Hubo un error al preparar el nuevo estudio.");
+    }
 }

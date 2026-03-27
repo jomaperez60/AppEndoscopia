@@ -2,24 +2,30 @@
 
 function checkAuth() {
     const overlay = document.getElementById('login-overlay');
-    const token = sessionStorage.getItem('endo_token');
     
-    if (token && state.currentUser) {
-        document.body.classList.remove('login-active');
-        overlay.style.display = 'none';
-        document.getElementById('current-user-name').innerText = state.currentUser.username;
-        document.getElementById('current-user-role').innerText = state.currentUser.role === 'admin' ? 'Administrador' : 'Médico General';
-        
-        // Show/hide admin-only elements
-        const adminElements = document.querySelectorAll('.admin-only');
-        adminElements.forEach(el => el.style.display = state.currentUser.role === 'admin' ? 'flex' : 'none');
-        
-        updateAvatarDisplay();
-        if (state.currentUser.role === 'admin') renderUsers();
-    } else {
-        document.body.classList.add('login-active');
-        overlay.style.display = 'flex';
+    // --- BYPASS FOR NETLIFY REVIEW ---
+    if (!state.currentUser) {
+        state.currentUser = {
+            username: 'invitado_demo',
+            role: 'admin', // Use admin for review to show all features
+            avatar: '👤'
+        };
+        sessionStorage.setItem('endo_current_user', JSON.stringify(state.currentUser));
+        sessionStorage.setItem('endo_token', 'demo_token_for_review');
     }
+
+    document.body.classList.remove('login-active');
+    if (overlay) overlay.style.display = 'none';
+    
+    document.getElementById('current-user-name').innerText = state.currentUser.username;
+    document.getElementById('current-user-role').innerText = state.currentUser.role === 'admin' ? 'Administrador (Demo)' : 'Médico General';
+    
+    // Show/hide admin-only elements
+    const adminElements = document.querySelectorAll('.admin-only');
+    adminElements.forEach(el => el.style.display = state.currentUser.role === 'admin' ? 'flex' : 'none');
+    
+    updateAvatarDisplay();
+    if (state.currentUser.role === 'admin' && typeof renderUsers === 'function') renderUsers();
 }
 
 async function handleLogin() {

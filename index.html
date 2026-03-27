@@ -11,6 +11,10 @@
     <meta name="theme-color" content="#0f172a">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for Statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -62,7 +66,7 @@
                         class="fa-solid fa-users"></i> <span>Pacientes (Base de Datos)</span></a>
                 <a href="#" class="nav-item admin-only" id="nav-users" onclick="switchMainView('users')"
                     style="display: none;"><i class="fa-solid fa-user-shield"></i> <span>Usuarios</span></a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-chart-pie"></i> <span>Estadísticas</span></a>
+                <a href="#" class="nav-item" id="nav-stats" onclick="switchMainView('stats')"><i class="fa-solid fa-chart-pie"></i> <span>Estadísticas</span></a>
                 <a href="#" class="nav-item" id="nav-settings" onclick="switchMainView('settings')"><i
                         class="fa-solid fa-gear"></i> <span>Configuración</span></a>
             </nav>
@@ -128,9 +132,10 @@
                         <button class="tab active" data-target="metadata">1. Paciente y Procedimiento</button>
                         <button class="tab" data-target="findings">2. Hallazgos Anatómicos</button>
                         <button class="tab" data-target="procedimientos-tab">3. Procedimientos</button>
-                        <button class="tab" data-target="diagnoses">4. Conclusión</button>
-                        <button class="tab" data-target="quality">5. Indicadores de Calidad</button>
-                        <button class="tab" data-target="images-tab">6. Registro de Imágenes</button>
+                        <button class="tab" data-target="histology">4. Histología</button>
+                        <button class="tab" data-target="diagnoses">5. Conclusión</button>
+                        <button class="tab" data-target="quality">6. Indicadores de Calidad</button>
+                        <button class="tab" data-target="images-tab">7. Registro de Imágenes</button>
                     </div>
 
                     <div class="tab-content active" id="metadata">
@@ -397,6 +402,24 @@
                         </div>
                     </div>
 
+                    <div class="tab-content" id="histology" style="display: none;">
+                        <div class="card">
+                            <h3><i class="fa-solid fa-microscope"></i> Histología y Patología</h3>
+                            <div class="form-grid full-width">
+                                <div class="input-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                        <label style="margin-bottom: 0;">Descripción Histopatológica (Resultados de Biopsias)</label>
+                                        <button class="btn-icon" onclick="document.getElementById('histology-text').value = ''; state.histology = '';" style="color: var(--danger); font-size: 0.9rem;" title="Borrar Histología">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                    <textarea id="histology-text" rows="8"
+                                        placeholder="Ingrese el reporte de patología si fueron tomadas biopsias. (Este apartado suele llenarse días después del estudio principal)."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="tab-content" id="diagnoses" style="display: none;">
                         <div class="card">
                             <h3><i class="fa-solid fa-stethoscope"></i> Conclusión y Plan</h3>
@@ -534,6 +557,46 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- Vista de Estadísticas -->
+            <div class="content-body" id="stats-view" style="display: none; padding: 20px;">
+                <div class="view-header" style="margin-bottom: 20px;">
+                    <h2><i class="fa-solid fa-chart-line"></i> Dashboard Clínico y Analíticas</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Análisis avanzado de los estudios registrados en la plataforma.</p>
+                </div>
+                
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="card" style="display: flex; flex-direction: column;">
+                        <h4 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-trophy"></i> Calidad de Preparación</h4>
+                        <canvas id="qualityChart" style="max-height: 250px;"></canvas>
+                    </div>
+                    
+                    <div class="card" style="display: flex; flex-direction: column;">
+                        <h4 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-users"></i> Demografía (Sexo)</h4>
+                        <canvas id="demographicsChart" style="max-height: 250px;"></canvas>
+                    </div>
+
+                    <div class="card" style="display: flex; flex-direction: column;">
+                        <h4 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-calendar-trend-up"></i> Estudios por Mes</h4>
+                        <canvas id="activityChart" style="max-height: 250px;"></canvas>
+                    </div>
+
+                    <div class="card" style="display: flex; flex-direction: column;">
+                        <h4 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-stethoscope"></i> Volumen Terapéutico</h4>
+                        <canvas id="therapeuticsChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-ranking-star"></i> Top 10 Diagnósticos Generales</h4>
+                    <canvas id="overallDiagnosesChart" style="max-height: 350px;"></canvas>
+                </div>
+
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: var(--primary);"><i class="fa-solid fa-map-location-dot"></i> Top 5 Regionales (Esófago, Estómago, Duodeno, Yeyuno)</h4>
+                    <canvas id="regionalDiagnosesChart" style="max-height: 450px;"></canvas>
                 </div>
             </div>
 
@@ -757,6 +820,7 @@
     <script src="js/history.js?v=2"></script>
     <script src="js/findings.js?v=2"></script>
     <script src="js/report.js?v=2"></script>
+    <script src="js/stats.js?v=2"></script>
     <script src="js/main.js?v=2"></script>
 </body>
 

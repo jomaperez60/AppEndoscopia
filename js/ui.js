@@ -127,17 +127,19 @@ function switchMainView(view) {
     const historyView = document.getElementById('history-view');
     const usersView = document.getElementById('users-view');
     const settingsView = document.getElementById('settings-view');
+    const statsView = document.getElementById('stats-view');
     const newActions = document.getElementById('topbar-actions');
     const historyActions = document.getElementById('history-actions');
     const navNew = document.getElementById('nav-new');
     const navHistory = document.getElementById('nav-history');
     const navUsers = document.getElementById('nav-users');
     const navSettings = document.getElementById('nav-settings');
+    const navStats = document.getElementById('nav-stats');
 
     // Hide all views first
-    [newView, historyView, usersView, settingsView].forEach(v => { if(v) v.style.display = 'none'; });
+    [newView, historyView, usersView, settingsView, statsView].forEach(v => { if(v) v.style.display = 'none'; });
     [newActions, historyActions].forEach(a => { if(a) a.style.display = 'none'; });
-    [navNew, navHistory, navUsers, navSettings].forEach(n => { if(n) n.classList.remove('active'); });
+    [navNew, navHistory, navUsers, navSettings, navStats].forEach(n => { if(n) n.classList.remove('active'); });
 
     if (view === 'new') {
         if(newView) newView.style.display = 'block';
@@ -160,5 +162,10 @@ function switchMainView(view) {
         navUsers.classList.add('active');
         document.getElementById('topbar-name').textContent = "Gestión de Usuarios";
         renderUsers();
+    } else if (view === 'stats') {
+        if(statsView) statsView.style.display = 'block';
+        navStats.classList.add('active');
+        document.getElementById('topbar-name').textContent = "Estadísticas";
+        if (typeof renderDashboard === 'function') renderDashboard();
     }
 }

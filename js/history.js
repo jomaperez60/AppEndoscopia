@@ -20,6 +20,7 @@ async function saveToHistory() {
         quality: { ...state.quality },
         diagnoses: document.getElementById('diag-final')?.value || '',
         plan: state.plan,
+        histology: document.getElementById('histology-text')?.value || state.histology || '',
         findings: [ ...state.findings ],
         procedimientos: [ ...state.procedimientos ],
         images: [ ...state.images ]
@@ -141,6 +142,7 @@ async function loadFromHistory(id, silent = false) {
         state.procedimientos = JSON.parse(JSON.stringify(record.procedimientos || []));
         state.images = JSON.parse(JSON.stringify(record.images || []));
         state.plan = record.plan || '';
+        state.histology = record.histology || '';
 
         // 2. Sync UI Elements
         const fieldMap = {
@@ -162,7 +164,8 @@ async function loadFromHistory(id, silent = false) {
             'calidad-completa': state.quality.completa,
             'calidad-tiempo': state.quality.tiempo,
             'diag-final': record.diagnoses || '',
-            'plan': state.plan
+            'plan': state.plan,
+            'histology-text': state.histology
         };
 
         Object.keys(fieldMap).forEach(key => {
@@ -286,9 +289,10 @@ async function newStudyFromHistory(id) {
         state.procedimientos = [];
         state.images = [];
         state.plan = '';
+        state.histology = '';
 
         // Limpiar inputs de la UI
-        const fieldsToClear = ['clinico-referente', 'indicacion', 'sedacion', 'instrumento', 'extension', 'diag-final', 'plan'];
+        const fieldsToClear = ['clinico-referente', 'indicacion', 'sedacion', 'instrumento', 'extension', 'diag-final', 'plan', 'histology-text'];
         fieldsToClear.forEach(fid => {
             const el = document.getElementById(fid);
             if(el) el.value = '';

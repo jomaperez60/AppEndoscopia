@@ -249,6 +249,12 @@ function generateReport(skipSave = false) {
                 </tr>
             </table>
 
+            ${state.histology && state.histology.trim() ? `
+            <div style="margin-bottom: 30px;">
+                <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">RESULTADOS HISTOPATOLÓGICOS</div>
+                <div style="padding-left: 5px; white-space: pre-wrap;">${state.histology}</div>
+            </div>` : ''}
+
             <div style="margin-bottom: 30px;">
                 <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">HALLAZGOS MACROSCÓPICOS</div>
                 <div style="padding-left: 5px;">${findingsHtml}</div>

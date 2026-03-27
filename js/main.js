@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const planEl = document.getElementById('plan');
     if(planEl) planEl.addEventListener('input', (e) => state.plan = e.target.value);
     
+    const histEl = document.getElementById('histology-text');
+    if(histEl) histEl.addEventListener('input', (e) => state.histology = e.target.value);
+    
     const diagFinalEl = document.getElementById('diag-final');
     if(diagFinalEl) diagFinalEl.addEventListener('input', (e) => state.metadata.diagFinal = e.target.value);
 

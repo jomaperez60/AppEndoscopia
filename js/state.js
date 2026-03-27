@@ -33,6 +33,7 @@ const state = {
     findings: [],
     procedimientos: [],
     plan: '',
+    histology: '',
     users: JSON.parse(localStorage.getItem('endo_users') || '[{"username":"admin","password":"admin","role":"admin","avatar":"Dr"}]'),
     currentUser: JSON.parse(sessionStorage.getItem('endo_current_user') || 'null'),
     settings: JSON.parse(localStorage.getItem('endo_settings') || '{"hospital":"Hospital Local","physician":"Dr. Clínico","location":"","specialty":"","language":"es","units":"cm","logo":null}'),

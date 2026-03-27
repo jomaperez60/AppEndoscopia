@@ -404,15 +404,25 @@
                                 <div class="findings-section">
                                     <div class="section-header">
                                         <h3><i class="fa-solid fa-clipboard-check"></i> Conclusiones y Diagnóstico</h3>
-                                        <button class="btn btn-outline btn-sm" onclick="openDiagnosesModal()">
-                                            <i class="fa-solid fa-list-check"></i> Seleccionar Diagnóstico
-                                        </button>
+                                        <div style="display: flex; gap: 8px;">
+                                            <button class="btn btn-outline btn-sm" onclick="document.getElementById('diag-final').value = ''; state.metadata.diagFinal = '';" style="border-color: var(--danger); color: var(--danger);" title="Borrar diagnóstico">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                            <button class="btn btn-outline btn-sm" onclick="openDiagnosesModal()">
+                                                <i class="fa-solid fa-list-check"></i> Seleccionar Diagnóstico
+                                            </button>
+                                        </div>
                                     </div>
                                     <textarea id="diag-final" rows="6"
                                         placeholder="Resumen de hallazgos y diagnóstico final estructurado..."></textarea>
                                 </div>
                                 <div class="input-group">
-                                    <label>Plan de manejo / Recomendaciones</label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                        <label style="margin-bottom: 0;">Plan de manejo / Recomendaciones</label>
+                                        <button class="btn-icon" onclick="document.getElementById('plan').value = ''; state.plan = '';" style="color: var(--danger); font-size: 0.9rem;" title="Borrar recomendaciones">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
                                     <textarea id="plan" rows="3"
                                         placeholder="Ej. Biopsias tomadas, control en 1 año."></textarea>
                                 </div>

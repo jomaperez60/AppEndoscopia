@@ -173,6 +173,7 @@ app.get('/studies', authMiddleware, async (req, res) => {
         dni: r.paciente_dni,
         sexo: r.paciente_sexo
       },
+      metadata: r.payload.metadata || {},
       clinical: r.payload.clinical || {},
       diagnoses: r.payload.diagnoses || r.payload.diagFinal || '',
       procedimientos: r.payload.procedimientos || [],

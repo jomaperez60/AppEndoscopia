@@ -78,9 +78,9 @@ async function renderHistory(filter = "") {
             return `
             <tr style="border-bottom: 1px solid var(--border);">
                 <td style="padding: 12px; font-size: 0.85rem;">${dateStr}</td>
-                <td style="padding: 12px; font-weight: 500;">${r.patient.nombre || 'Sin nombre'}</td>
-                <td style="padding: 12px; font-size: 0.85rem; color: var(--text-muted);">${r.patient.dni || '-'}</td>
-                <td style="padding: 12px; font-size: 0.85rem;">${r.metadata.indicacion || '-'}</td>
+                <td style="padding: 12px; font-weight: 500;">${r.patient?.nombre || 'Sin nombre'}</td>
+                <td style="padding: 12px; font-size: 0.85rem; color: var(--text-muted);">${r.patient?.dni || '-'}</td>
+                <td style="padding: 12px; font-size: 0.85rem;">${r.metadata?.indicacion || '-'}</td>
                 <td style="padding: 12px; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.diagnoses || '-'}</td>
                 <td style="padding: 12px; text-align: center; white-space: nowrap;">
                     <button class="btn btn-icon" title="Ver Reporte" onclick="viewHistoryDetail('${r.id}')" style="color: var(--success); margin-right: 5px;"><i class="fa-solid fa-eye"></i></button>

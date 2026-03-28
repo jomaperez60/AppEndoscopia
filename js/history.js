@@ -12,12 +12,6 @@ async function saveToHistory() {
         return;
     }
     
-    // Force update state from DOM just before saving to ensure no loss
-    const domSex = document.getElementById('paciente-sexo')?.value;
-    if (domSex) state.patient.sexo = domSex;
-    const domNombre = document.getElementById('paciente-nombre')?.value;
-    if (domNombre) state.patient.nombre = domNombre;
-
     const record = {
         currentStudyId: state.currentStudyId,
         patient: { ...state.patient },
@@ -31,8 +25,6 @@ async function saveToHistory() {
         procedimientos: [ ...state.procedimientos ],
         images: [ ...state.images ]
     };
-
-    console.log("[DEBUG] Sending study record to server:", JSON.stringify(record, null, 2));
 
     try {
         const res = await fetch(`${CONFIG.API_BASE_URL}/studies`, {

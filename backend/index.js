@@ -152,17 +152,16 @@ app.get('/studies', authMiddleware, async (req, res) => {
   try {
     const studiesResult = await db.query(`
       SELECT s.id as study_id, s.created_at as fecha, 
-             COALESCE(NULLIF(p.nombre, ''), NULLIF(v.payload->'patient'->>'nombre', '')) as paciente_nombre, 
-             COALESCE(NULLIF(p.dni, ''), NULLIF(v.payload->'patient'->>'dni', '')) as paciente_dni, 
-             COALESCE(NULLIF(p.sexo, ''), NULLIF(v.payload->'patient'->>'sexo', '')) as paciente_sexo,
+             p.nombre as paciente_nombre, 
+             p.dni as paciente_dni, 
+             p.sexo as paciente_sexo,
              v.payload
       FROM studies s
-      LEFT JOIN patients p ON s.patient_id = p.id
+      JOIN patients p ON s.patient_id = p.id
       JOIN study_versions v ON s.id = v.study_id AND s.current_version = v.version
       WHERE s.status != 'deleted' AND (
-        COALESCE(NULLIF(p.nombre, ''), '') ILIKE $1 OR 
-        COALESCE(NULLIF(p.dni, ''), '') ILIKE $1 OR 
-        COALESCE(NULLIF(v.payload->'patient'->>'nombre', ''), '') ILIKE $1
+        p.nombre ILIKE $1 OR 
+        p.dni ILIKE $1
       )
       ORDER BY s.created_at DESC
     `, [`%${search}%`]);
@@ -192,14 +191,9 @@ app.get('/studies/export/csv', authMiddleware, async (req, res) => {
   try {
     const studiesResult = await db.query(`
       SELECT s.id as study_id, s.created_at as fecha, 
-             COALESCE(NULLIF(p.nombre, ''), NULLIF(v.payload->'patient'->>'nombre', '')) as nombre,
-             COALESCE(NULLIF(p.dni, ''), NULLIF(v.payload->'patient'->>'dni', '')) as dni,
-             COALESCE(NULLIF(p.sexo, ''), NULLIF(v.payload->'patient'->>'sexo', '')) as sexo,
-             COALESCE(NULLIF(p.municipio, ''), NULLIF(v.payload->'patient'->>'municipio', '')) as municipio,
-             COALESCE(NULLIF(p.departamento, ''), NULLIF(v.payload->'patient'->>'departamento', '')) as departamento,
-             v.payload
+             p.nombre, p.dni, p.sexo, p.municipio, p.departamento, v.payload
       FROM studies s
-      LEFT JOIN patients p ON s.patient_id = p.id
+      JOIN patients p ON s.patient_id = p.id
       JOIN study_versions v ON s.id = v.study_id AND s.current_version = v.version
       WHERE s.status != 'deleted'
       ORDER BY s.created_at DESC
@@ -282,8 +276,6 @@ app.post('/studies', authMiddleware, async (req, res) => {
     const currentStudyId = payload.currentStudyId;
     const patientData = payload.patient;
     
-    console.log(`[BACKEND DEBUG] POST /studies. StudyID: ${currentStudyId}, Sex: ${patientData?.sexo}, Name: ${patientData?.nombre}`);
-    
     let pgClient;
   try {
     pgClient = await db.pool.connect();
@@ -320,8 +312,9 @@ app.post('/studies', authMiddleware, async (req, res) => {
     let studyId = currentStudyId;
     let newVersion = 1;
 
-    // We keep patient in payload as a backup layer for COALESCE in SQL
+    // Remove patient from payload to avoid duplication in version JSON
     const payloadCopy = { ...payload };
+    delete payloadCopy.patient;
     delete payloadCopy.currentStudyId;
 
     if (!studyId) {
@@ -346,8 +339,7 @@ app.post('/studies', authMiddleware, async (req, res) => {
       const sCheck = await pgClient.query('SELECT current_version FROM studies WHERE id = $1', [studyId]);
       if (sCheck.rows.length > 0) {
         newVersion = sCheck.rows[0].current_version + 1;
-        // Always update patient_id in case the record DNI was changed
-        await pgClient.query('UPDATE studies SET current_version = $1, patient_id = $2, updated_at = now() WHERE id = $3', [newVersion, patientId, studyId]);
+        await pgClient.query('UPDATE studies SET current_version = $1, updated_at = now() WHERE id = $2', [newVersion, studyId]);
         
         await pgClient.query(
           'INSERT INTO study_versions (study_id, version, payload, created_by) VALUES ($1, $2, $3, $4)',

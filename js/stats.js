@@ -10,12 +10,10 @@ async function renderDashboard() {
     }
 
     try {
-        console.log("Fetching studies from:", `${CONFIG.API_BASE_URL}/studies`);
         const res = await fetch(`${CONFIG.API_BASE_URL}/studies`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const studies = await res.json();
-        console.log("Studies received:", studies);
         
         if (!studies || studies.length === 0) {
             console.warn("No studies found in database.");
@@ -56,52 +54,15 @@ function processAndRenderStats(studies) {
         else if (prep.includes('inadecuada') || prep.includes('inadecuado') || prep.includes('mala')) qualityData['Inadecuada']++;
         else qualityData['Adecuada']++; // Default if not matched
 
-        // Demographics Detection with Fallbacks
-        const pat = s.patient || {};
-        let sex = (pat.sexo || '').toLowerCase().trim();
-        
-        // Final fallback: try to find sex in the raw study object if patient is empty
-        if (!sex && s.patient_sexo) sex = String(s.patient_sexo).toLowerCase().trim();
-        
-        console.log(`[STATS DEBUG] Aggregating Patient: ${pat.nombre || 'Anon'}, Sex Found: "${sex}"`);
-
-        // Emergency Fallback: If sex is still empty, look at the name for hints (e.g., User typing "Juan Lopez m" or "Don Juan")
-        if (!sex && pat.nombre) {
-            const nameLower = pat.nombre.toLowerCase().trim();
-            // Match suffix m/f or (m)/(f)
-            if (nameLower.endsWith(' m') || nameLower.endsWith('(m)') || nameLower.includes(' masc')) sex = 'masculino';
-            else if (nameLower.endsWith(' f') || nameLower.endsWith('(f)') || nameLower.includes(' fem')) sex = 'femenino';
-            
-            // Match common titles (Don, Sr, Doña, Sra, Dr, Dra)
-            const titlesMale = ['don ', 'sr ', 'sr. ', 'dr ', 'dr. '];
-            const titlesFemale = ['doña ', 'sra ', 'sra. ', 'dra ', 'dra. '];
-            if (!sex) {
-                if (titlesMale.some(t => nameLower.startsWith(t))) sex = 'masculino';
-                else if (titlesFemale.some(t => nameLower.startsWith(t))) sex = 'femenino';
-            }
-            if (sex) console.log(`[STATS DEBUG] Recovered Sex from name for: ${pat.nombre} -> ${sex}`);
-        }
-
-        if (sex === 'masculino' || sex === 'm' || sex.startsWith('m')) {
-            demoData['Masculino']++;
-        } else if (sex === 'femenino' || sex === 'f' || sex.startsWith('f')) {
-            demoData['Femenino']++;
-        } else if (sex === 'otro' || sex.startsWith('o')) {
-            demoData['Otro']++;
-        } else if (sex) {
-            demoData['Otro']++; // Catch-all for non-empty but unknown values
-        } else {
-            demoData['Sin especificar']++;
-            debugTable.push({ name: pat.nombre || 'N/A', raw_sex: pat.sexo || 'N/A', detected: 'Sin especificar' });
-        }
+        // Demographics
+        const sex = (s.patient?.sexo || '').toLowerCase().trim();
+        if (sex === 'masculino' || sex === 'm') demoData['Masculino']++;
+        else if (sex === 'femenino' || sex === 'f') demoData['Femenino']++;
+        else if (sex === 'otro') demoData['Otro']++;
+        else demoData['Sin especificar']++;
     });
 
-    console.log("[STATS] Resulting Data:", demoData);
-    console.group("Demographics Debug Table");
-    console.table(debugTable);
-    console.groupEnd();
-
-    state.studies.forEach(s => {
+    studies.forEach(s => {
         // Activity (Month-Year)
         const dateObj = new Date(s.date);
         const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;

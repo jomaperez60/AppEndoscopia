@@ -494,3 +494,42 @@ hr.mst-divider { border: 0; border-top: 1px dashed var(--border); margin: 20px 0
     .content-body { max-width: 1500px; }
     .form-grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* Stats Dashboard Tables */
+.stats-table-container {
+    margin-top: 15px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.stats-table {
+    width: 100%;
+    font-size: 0.8rem;
+    border-collapse: collapse;
+}
+.stats-table th {
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border);
+}
+.stats-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+.stats-table tr:last-child td {
+    border-bottom: none;
+}
+.stats-table .count-cell {
+    text-align: right;
+    font-weight: 700;
+    color: var(--primary);
+}
+.stats-table .percent-cell {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    width: 50px;
+}

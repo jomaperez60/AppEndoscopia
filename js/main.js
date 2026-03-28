@@ -44,12 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if(el) el.addEventListener('change', (e) => state.quality[id] = e.target.value);
     });
 
+    // Live Debug Overlay for Sexo (Level 4 Resilience)
+    const debugOverlay = document.createElement('div');
+    debugOverlay.id = 'live-sex-debug';
+    debugOverlay.style = 'position:fixed; top:10px; right:70px; background:rgba(244,63,94,0.9); color:white; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:bold; z-index:9999; pointer-events:none; box-shadow:0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s;';
+    debugOverlay.innerHTML = `DEBUG: Sexo = <span id="debug-sex-val">${state.patient.sexo || 'N/A'}</span>`;
+    document.body.appendChild(debugOverlay);
+
     ['nombre', 'dni', 'fnacimiento', 'sexo', 'antecedentes'].forEach(field => {
         const el = document.getElementById(`paciente-${field}`);
         if(el) {
-            el.addEventListener('input', (e) => {
-                state.patient[field] = e.target.value;
-                updateTopbar();
+            ['input', 'change'].forEach(ev => {
+                el.addEventListener(ev, (e) => {
+                    const val = e.target.value;
+                    state.patient[field] = val;
+                    updateTopbar();
+                    if (field === 'sexo') {
+                        const debugVal = document.getElementById('debug-sex-val');
+                        if (debugVal) debugVal.innerText = val || 'N/A';
+                        console.log(`[STATE SYNC] Sexo updated to: ${val}`);
+                    }
+                });
             });
         }
     });

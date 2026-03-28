@@ -6,7 +6,7 @@ async function renderUsers() {
     if (!token) return;
 
     try {
-        const res = await fetch('https://endohn.netlify.app/users', {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/users`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) return;
@@ -45,7 +45,7 @@ async function saveNewUser() {
 
     const token = sessionStorage.getItem('endo_token');
     try {
-        const res = await fetch('https://endohn.netlify.app/users', {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ username: user, password: pass, role })

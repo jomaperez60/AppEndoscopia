@@ -3,22 +3,17 @@
 function checkAuth() {
     const overlay = document.getElementById('login-overlay');
     
-    // --- BYPASS FOR NETLIFY REVIEW ---
     if (!state.currentUser) {
-        state.currentUser = {
-            username: 'invitado_demo',
-            role: 'admin', // Use admin for review to show all features
-            avatar: '👤'
-        };
-        sessionStorage.setItem('endo_current_user', JSON.stringify(state.currentUser));
-        sessionStorage.setItem('endo_token', 'demo_token_for_review');
+        document.body.classList.add('login-active');
+        if (overlay) overlay.style.display = 'flex';
+        return;
     }
 
     document.body.classList.remove('login-active');
     if (overlay) overlay.style.display = 'none';
     
     document.getElementById('current-user-name').innerText = state.currentUser.username;
-    document.getElementById('current-user-role').innerText = state.currentUser.role === 'admin' ? 'Administrador (Demo)' : 'Médico General';
+    document.getElementById('current-user-role').innerText = state.currentUser.role === 'admin' ? 'Administrador' : 'Médico General';
     
     // Show/hide admin-only elements
     const adminElements = document.querySelectorAll('.admin-only');
@@ -34,7 +29,7 @@ async function handleLogin() {
     const errorEl = document.getElementById('login-error');
 
     try {
-        const response = await fetch('https://endohn.netlify.app/auth/login', {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, password: pass })

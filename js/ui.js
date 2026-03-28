@@ -130,6 +130,7 @@ function switchMainView(view) {
     const statsView = document.getElementById('stats-view');
     const newActions = document.getElementById('topbar-actions');
     const historyActions = document.getElementById('history-actions');
+    const patientBanner = document.querySelector('.patient-banner');
     const navNew = document.getElementById('nav-new');
     const navHistory = document.getElementById('nav-history');
     const navUsers = document.getElementById('nav-users');
@@ -140,10 +141,12 @@ function switchMainView(view) {
     [newView, historyView, usersView, settingsView, statsView].forEach(v => { if(v) v.style.display = 'none'; });
     [newActions, historyActions].forEach(a => { if(a) a.style.display = 'none'; });
     [navNew, navHistory, navUsers, navSettings, navStats].forEach(n => { if(n) n.classList.remove('active'); });
+    if (patientBanner) patientBanner.style.display = 'none';
 
     if (view === 'new') {
         if(newView) newView.style.display = 'block';
         if(newActions) newActions.style.display = 'flex';
+        if(patientBanner) patientBanner.style.display = 'flex';
         navNew.classList.add('active');
         document.getElementById('topbar-name').textContent = state.patient.nombre || "Nuevo Paciente";
     } else if (view === 'history') {

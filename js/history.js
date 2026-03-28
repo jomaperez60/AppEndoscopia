@@ -11,6 +11,12 @@ async function saveToHistory() {
         alert("Debe iniciar sesión para guardar estudios.");
         return;
     }
+    
+    // Force update state from DOM just before saving to ensure no loss
+    const domSex = document.getElementById('paciente-sexo')?.value;
+    if (domSex) state.patient.sexo = domSex;
+    const domNombre = document.getElementById('paciente-nombre')?.value;
+    if (domNombre) state.patient.nombre = domNombre;
 
     const record = {
         currentStudyId: state.currentStudyId,
@@ -26,8 +32,10 @@ async function saveToHistory() {
         images: [ ...state.images ]
     };
 
+    console.log("[DEBUG] Sending study record to server:", JSON.stringify(record, null, 2));
+
     try {
-        const res = await fetch('https://endohn.netlify.app/studies', {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/studies`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -61,7 +69,7 @@ async function renderHistory(filter = "") {
     if (!token) return;
 
     try {
-        const res = await fetch(`https://endohn.netlify.app/studies?search=${encodeURIComponent(filter)}`, {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/studies?search=${encodeURIComponent(filter)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const records = await res.json();
@@ -121,7 +129,7 @@ async function loadFromHistory(id, silent = false) {
     }
 
     try {
-        const res = await fetch(`https://endohn.netlify.app/studies/${id}`, {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/studies/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -213,7 +221,7 @@ async function deleteFromHistory(id) {
     }
     if(confirm("¿Eliminar este registro de forma permanente?")) {
         try {
-            const res = await fetch(`https://endohn.netlify.app/studies/${id}`, {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/studies/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -241,7 +249,7 @@ function exportToCSV() {
         return;
     }
 
-    fetch('https://endohn.netlify.app/studies/export/csv', {
+    fetch(`${CONFIG.API_BASE_URL}/studies/export/csv`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => {
@@ -268,7 +276,7 @@ async function newStudyFromHistory(id) {
     if(!confirm("¿Desea crear un nuevo estudio clínico para este paciente? Su información personal se copiará a un formulario nuevo y en blanco.")) return;
 
     try {
-        const res = await fetch(`https://endohn.netlify.app/studies/${id}`, {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/studies/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         

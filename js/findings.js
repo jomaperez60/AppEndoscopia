@@ -649,79 +649,84 @@ function cleanMstString(str) {
     let results = [];
 
     const labelsToIgnore = [
-        'Número', 'Extensión', 'Situación', 'Aspecto', 'Tipo', 
-        'Grado', 'Tamaño', 'Sangrado', 'Estigmas de sangrado', 'Estigmas',
-        'Circunferencial', 'Obstructivo', 'Pedículo', 'Fondo',
-        'Clasificación', 'Atributos Generales', 'morfología', 'distensibilidad',
-        'cm desde incisivos', 'Sobrepasable', 'Material de sutura visible', 
-        'Material pigmentado', 'Forma', 'Orificio', 'Instrumento', 'Método', 
-        'Espécimen', 'Resultado', 'Recuperación del pólipo', 'Precorte', 
-        'Forma extracción', 'Material inyectado', 'Volumen', 'Motivo', 
-        'Longitud', 'Diámetro', 'Número', 'Lugar(es)', 'Diagnósticos', 'Terapéuticos'
+        'número', 'extensión', 'situación', 'aspecto', 'tipo', 
+        'grado', 'tamaño', 'tamaño / volumen', 'sangrado', 'estigmas de sangrado', 'estigmas',
+        'circunferencial', 'obstructivo', 'pedículo', 'fondo',
+        'clasificación', 'atributos generales', 'morfología', 'distensibilidad',
+        'cm desde incisivos', 'sobrepasable', 'material de sutura visible', 
+        'material pigmentado', 'forma', 'orificio', 'instrumento', 'método', 
+        'espécimen', 'resultado', 'recuperación del pólipo', 'precorte', 
+        'forma extracción', 'material inyectado', 'volumen', 'motivo', 
+        'longitud', 'diámetro', 'lugar(es)', 'diagnósticos', 'terapéuticos'
     ];
 
     for (let i = 0; i < components.length; i++) {
         let comp = components[i];
-        let next = components[i + 1] ? components[i + 1].trim() : null;
         
-        // Handle "Label: Value" format
+        let label = comp;
+        let value = null;
+        
         if (comp.includes(':')) {
-            let [label, value] = comp.split(':').map(s => s.trim());
-            comp = label;
-            next = value; // Treat the value as the next item (and we won't skip i++)
+            let parts = comp.split(':');
+            label = parts[0].trim();
+            value = parts.slice(1).join(':').trim();
         }
 
-        let l = comp.toLowerCase();
-        let n = next ? next.toLowerCase() : null;
+        let l = label.toLowerCase();
+        let v = value ? value.toLowerCase() : null;
 
-        // Smart combinations
-        if (l === 'sangrado') {
-            if (n === 'no') {
-                results.push('sin evidencia de sangrado activo');
-                if (!components[i].includes(':')) i++; // Skip "no" if it was a separate item
-            } else if (n) {
-                results.push('con sangrado ' + n);
-                if (!components[i].includes(':')) i++;
+        // Skip placeholder specifics
+        if (l === '(especificar)' || v === '(especificar)') {
+            if (!v || v === '(especificar)') {
+                if (l !== '(especificar)') results.push(l);
+                continue;
+            }
+        }
+
+        if (v) {
+            // Smart combinations for boolean-like values
+            if (l === 'sangrado') {
+                if (v === 'no' || v.includes('ausente')) results.push('sin evidencia de sangrado activo');
+                else results.push('con sangrado ' + v);
+            } else if (l === 'estigmas de sangrado' || l === 'estigmas') {
+                if (v === 'no' || v.includes('ausente')) results.push('sin estigmas de sangrado reciente');
+                else results.push('con estigmas de sangrado ' + v);
+            } else if (l === 'circunferencial') {
+                if (v === 'si' || v.includes('presente')) results.push('circunferencial');
+            } else if (l === 'obstructivo') {
+                if (v === 'si' || v.includes('presente')) results.push('obstructivo');
             } else {
-                results.push('sangrado');
+                // General Label: Value handling
+                if (v === 'no') {
+                    results.push('sin ' + l);
+                } else if (v === 'si') {
+                    results.push('con ' + l);
+                } else {
+                    // Decide whether to print the label
+                     let ignoreLabel = labelsToIgnore.includes(l) || labelsToIgnore.some(ignored => l.startsWith(ignored + ' '));
+                     if (ignoreLabel) {
+                         results.push(v);
+                     } else {
+                         results.push(l + ' ' + v);
+                     }
+                }
             }
-        } else if (l === 'estigmas de sangrado' || l === 'estigmas') {
-            if (n === 'no') {
-                results.push('sin estigmas de sangrado reciente');
-                if (!components[i].includes(':')) i++;
-            } else if (n) {
-                results.push('con estigmas de sangrado ' + n);
-                if (!components[i].includes(':')) i++;
-            } else {
-                results.push('estigmas de sangrado');
-            }
-        } else if (l === 'circunferencial') {
-            if (n === 'si') {
-                results.push('circunferencial');
-                if (!components[i].includes(':')) i++;
-            }
-        } else if (l === 'obstructivo') {
-            if (n === 'si') {
-                results.push('obstructivo');
-                if (!components[i].includes(':')) i++;
-            }
-        } else if (labelsToIgnore.includes(comp)) {
-            // Ignore the label if it's just a structural word
-            continue;
-        } else if (l === 'no') {
-            results.push('ausente');
-        } else if (l === 'si') {
-            results.push('presente');
         } else {
-            results.push(l);
+            // No value (just a simple string tag)
+            if (l === 'no' || l.includes('ausente')) {
+                // meaningless alone
+            } else if (l === 'si' || l.includes('presente')) {
+                // meaningless alone
+            } else if (!labelsToIgnore.includes(l)) {
+                results.push(l);
+            }
         }
     }
 
     // Join and final cleanup
-    let clean = results.filter(r => r && r !== 'si' && r !== 'no').join(', ');
+    let clean = results.filter(r => r && r !== '').join(', ');
     
     // Global refinements
-    clean = clean.replace(/\(especificar\)/gi, '');
     clean = clean.replace(/\s+/g, ' ').trim();
     
     return clean;

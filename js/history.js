@@ -117,7 +117,9 @@ async function loadFromHistory(id, silent = false) {
             alert("Solo los administradores pueden editar estudios guardados.");
             return;
         }
-        if(!confirm("¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
+        if(!confirm("AVISO HIPAA: Va a cargar un estudio con información protegida (PHI). Esta acción será auditada.\n\n¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
+        
+        console.warn(`[AUDIT LOG] Usuario ${state.currentUser?.username} cargó estudio ${id} para edición a las ${new Date().toISOString()}`);
     }
 
     try {
@@ -241,7 +243,10 @@ function exportToCSV() {
         return;
     }
 
-    fetch(`${CONFIG.API_BASE_URL}/studies/export/csv`, {
+    const anonymize = confirm("HIPAA COMPLIANCE: ¿Desea anonimizar la exportación? (Recomendado)\n\nOk = Exportar SIN nombres ni DNI\nCancelar = Exportar datos sensibles en texto claro");
+    const queryStr = anonymize ? "?anonymize=true" : "?anonymize=false";
+
+    fetch(`${CONFIG.API_BASE_URL}/studies/export/csv${queryStr}`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => {
@@ -252,7 +257,8 @@ function exportToCSV() {
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `Endoscopia_Export_${new Date().toISOString().split('T')[0]}.csv`;
+        const prefix = anonymize ? 'Anonimizado' : 'Sensible';
+        link.download = `Endoscopia_${prefix}_${new Date().toISOString().split('T')[0]}.csv`;
         link.click();
     })
     .catch(e => {

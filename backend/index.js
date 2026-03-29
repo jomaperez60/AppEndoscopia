@@ -200,6 +200,8 @@ app.get('/studies/export/csv', authMiddleware, async (req, res) => {
       ORDER BY s.created_at DESC
     `);
 
+    const anonymize = req.query.anonymize === 'true';
+
     const headers = ["ID", "Fecha", "Nombre", "DNI", "Sexo", "Procedencia", "ASA", "Indicación", "Procedimientos", "Conclusión"];
     const rows = studiesResult.rows.map(r => {
       const payload = r.payload || {};
@@ -208,8 +210,8 @@ app.get('/studies/export/csv', authMiddleware, async (req, res) => {
       return [
         r.study_id,
         new Date(r.fecha).toLocaleDateString('es-ES'),
-        r.nombre,
-        r.dni,
+        anonymize ? '******' : r.nombre,
+        anonymize ? '******' : r.dni,
         r.sexo,
         `${r.municipio || ''}, ${r.departamento || ''}`,
         clinical.asa || '',

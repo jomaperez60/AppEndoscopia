@@ -15,6 +15,7 @@ const mstTree = {
             'Membrana': [],
             'Anillo (incluye Schatzki)': [],
             'Hernia de Hiato': {
+                'Clasificación (Hill)': ['Grado I', 'Grado II', 'Grado III', 'Grado IV'],
                 'Tamaño / Volumen': ['Pequeña', 'Mediana', 'Grande'],
                 'Línea Z (cm desde incisivos)': ['(especificar)'],
                 'Estrechez hiatal (cm desde incisivos)': ['(especificar)']
@@ -52,10 +53,19 @@ const mstTree = {
                 'Extensión': ['Parcheada', 'Difusa']
             },
             'Esofagitis': {
-                'Grado (Savary-Miller)': ['Grado I', 'Grado II', 'Grado III', 'Grado IV'],
+                'Clasificación (Los Ángeles)': ['Grado A', 'Grado B', 'Grado C', 'Grado D'],
                 'Sangrado': ['Si', 'No']
             },
+            'Esofagitis Eosinofílica (EREFS)': {
+                'Edema': ['Ausente (0)', 'Presente (1)'],
+                'Anillos': ['Ausentes (0)', 'Leves (1)', 'Moderados (2)', 'Severos (3)'],
+                'Exudados': ['Ausentes (0)', 'Leves (1)', 'Severos (2)'],
+                'Surcos': ['Ausentes (0)', 'Verticales leves (1)', 'Verticales severos (2)'],
+                'Estenosis': ['Ausente (0)', 'Presente (1)']
+            },
             'Esófago de Barrett': {
+                'Clasificación Praga (Circunferencial C, cm)': ['(especificar)'],
+                'Clasificación Praga (Máxima M, cm)': ['(especificar)'],
                 'Línea Z (cm desde incisivos)': ['(especificar)'],
                 'Extremo sup. pliegues gástricos (cm desde incisivos)': ['(especificar)']
             },
@@ -91,6 +101,8 @@ const mstTree = {
                 },
                 'Tumor / Masa': {
                     'Tamaño': ['Pequeña', 'Mediana', 'Grande'],
+                    'Clasificación Vienna (Superficial)': ['Normal (1)', 'Indefinido (2)', 'Neoplasia Bajo Grado (3)', 'Neoplasia Alto Grado (4)', 'Carcinoma Invasivo (5)'],
+                    'Clasificación NICE (NBI)': ['Tipo 1', 'Tipo 2', 'Tipo 3'],
                     'Tipo': ['Submucoso', 'Vegetante', 'Ulcerado'],
                     'Circunferencial': ['Si', 'No'],
                     'Obstructivo': ['Parcial', 'Completa'],
@@ -169,8 +181,10 @@ const mstTree = {
             'Nodular': {
                 'Extensión': ['Localizada', 'Parcheada', 'Difusa']
             },
-            'Atrófica': {
-                'Extensión': ['Localizada', 'Parcheada', 'Difusa']
+            'Atrófica / Metaplasia': {
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Clasificación Kimura-Takemoto': ['C-I', 'C-II', 'C-III', 'O-I', 'O-II', 'O-III'],
+                'Sistema OLGA/OLGIM (Biopsia)': ['Estadio I', 'Estadio II', 'Estadio III', 'Estadio IV']
             },
             'Hemorrágica': {
                 'Extensión': ['Localizada', 'Parcheada', 'Difusa']
@@ -215,6 +229,7 @@ const mstTree = {
             },
             'Tumor / Masa': {
                 'Tamaño': ['Pequeña', 'Mediana', 'Grande', 'Diámetro en mm (especificar)'],
+                'Clasificación Borrmann': ['I (Polipoideo)', 'II (Ulcerado)', 'III (Ulcerado infiltrante)', 'IV (Linitis plástica)'],
                 'Tipo': ['Submucoso', 'Vegetante', 'Ulcerado', 'Infiltrante'],
                 'Circunferencial': ['Si', 'No'],
                 'Sangrado': ['Si: a chorro', 'Si: rezumado', 'No'],
@@ -280,7 +295,10 @@ const mstTree = {
                 'Sangrado': ['Si: Espontáneo', 'Si: Sangrado al contacto', 'No']
             },
             'Nodular': { 'Extensión': ['Localizada', 'Difusa'] },
-            'Atrófica': { 'Extensión': ['Localizada', 'Parcheada', 'Difusa'] },
+            'Atrófica (Enf. Celíaca)': { 
+                'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
+                'Clasificación visual Marsh': ['Normal (0)', 'Patrón de mosaico (I-II)', 'Festoneado/Atrofia parcial (IIIa-b)', 'Atrofia total (IIIc)']
+            },
             'Hemorrágica': {
                 'Extensión': ['Localizada', 'Parcheada', 'Difusa'],
                 'Sangrado': ['Si', 'No'],

@@ -47,7 +47,8 @@ body.login-active #app-container {
 
 .login-card {
     background: var(--bg-card);
-    width: 380px;
+    width: 90%;
+    max-width: 380px;
     padding: 40px;
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
@@ -488,6 +489,15 @@ hr.mst-divider { border: 0; border-top: 1px dashed var(--border); margin: 20px 0
     .report-modal-content { width: 95%; }
     .btn { width: 100%; justify-content: center; }
     .actions { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    
+    /* Document Responsiveness */
+    .report-document { padding: 15px !important; }
+    .report-document h1 { font-size: 1.3rem !important; }
+    .report-document table td { display: block; width: 100% !important; border: none !important; border-bottom: 1px solid #eee !important; padding: 6px !important; }
+    .report-document table tr { display: flex; flex-direction: column; border: 1px solid #ddd; margin-bottom: 10px; }
+    .report-mapping-container { flex-direction: column !important; align-items: center !important; }
+    .report-mapping-container > div { width: 100% !important; }
+    .report-photos-grid { grid-template-columns: 1fr !important; }
 }
 
 @media (min-width: 1600px) {

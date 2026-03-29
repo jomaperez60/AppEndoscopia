@@ -213,7 +213,7 @@ function generateReport(skipSave = false) {
     }
 
     const html = `
-        <div class="report-document" style="padding: 50px; color: #1a1a1a; font-family: 'Inter', sans-serif; line-height: 1.5;">
+        <div class="report-document" style="color: #1a1a1a; font-family: 'Inter', sans-serif; line-height: 1.5;">
             <!-- Header Structure -->
             <div style="display: flex; align-items: center; border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 30px;">
                 ${state.settings.logo ? `<div style="width: 100px; padding-right: 20px;"><img src="${state.settings.logo}" style="width: 100%; max-height: 100px; object-fit: contain;"></div>` : ''}
@@ -278,7 +278,7 @@ function generateReport(skipSave = false) {
                 <div style="background: #333; color: white; padding: 6px 12px; font-weight: bold; margin-bottom: 15px; border-radius: 2px;">DOCUMENTACIÓN FOTOGRÁFICA Y MAPEEO</div>
                 
                 <!-- Central Diagram Mapping -->
-                <div style="display: flex; gap: 30px; align-items: flex-start; margin-bottom: 30px; background: #fcfcfc; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                <div class="report-mapping-container" style="display: flex; gap: 30px; align-items: flex-start; margin-bottom: 30px; background: #fcfcfc; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
                     <div style="position: relative; width: 300px; background: white; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
                         <img src="gi_diagram.png" style="width: 100%; display: block;">
                         <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
@@ -311,7 +311,7 @@ function generateReport(skipSave = false) {
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="report-photos-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                     ${state.images.map((img, i) => `
                         <div style="text-align: center; position: relative;">
                             <img src="${img.data}" style="width: 100%; height: 130px; object-fit: cover; border: 1px solid #eee; border-radius: 4px;">

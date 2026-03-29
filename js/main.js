@@ -39,12 +39,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // New clinical fields
+    const antiTipoEl = document.getElementById('clinico-anti-tipo');
+    if(antiTipoEl) antiTipoEl.addEventListener('change', (e) => state.clinical.antiTipo = e.target.value);
+    
+    const antiDiasEl = document.getElementById('clinico-anti-dias');
+    if(antiDiasEl) antiDiasEl.addEventListener('input', (e) => state.clinical.antiDias = e.target.value);
+
+    // New metadata fields
+    ['traz-procesador', 'traz-cana', 'traz-lavado'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            const stateKey = id.replace(/-([a-z])/g, g => g[1].toUpperCase()); // trazProcesador
+            el.addEventListener('input', (e) => state.metadata[stateKey] = e.target.value);
+        }
+    });
+
+    // AE Checkboxes
+    ['ae-hipo', 'ae-bradi', 'ae-perf', 'ae-sang'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            const stateKey = id.replace(/-([a-z])/g, g => g[1].toUpperCase()); // aeHipo
+            el.addEventListener('change', (e) => state.quality[stateKey] = e.target.checked);
+        }
+    });
+
     ['consentimiento', 'fotos', 'completa', 'tiempo'].forEach(id => {
         const el = document.getElementById(`calidad-${id}`);
         if(el) el.addEventListener('change', (e) => state.quality[id] = e.target.value);
     });
 
-    ['nombre', 'dni', 'fnacimiento', 'sexo', 'antecedentes'].forEach(field => {
+    ['nombre', 'dni', 'fnacimiento', 'sexo', 'antecedentes', 'alergias'].forEach(field => {
         const el = document.getElementById(`paciente-${field}`);
         if(el) {
             ['input', 'change'].forEach(ev => {
@@ -139,10 +164,10 @@ function resetForm() {
     if(!confirm("¿Desea limpiar el formulario para un nuevo estudio? Se perderán los datos no guardados.")) return;
     
     state.currentStudyId = null;
-    state.patient = { nombre:'', dni:'', fnacimiento:'', sexo:'', departamento:'', municipio:'', antecedentes:'', edad:'' };
-    state.clinical = { referente: '', asa: 'ASA I (Normal, sano)', anticoagulante: 'No', preparacion: 'Adecuado (Ayuno > 8h)' };
-    state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', instrumento: 'Olympus', extension: 'Duodeno D2' };
-    state.quality = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos' };
+    state.patient = { nombre:'', dni:'', fnacimiento:'', sexo:'', departamento:'', municipio:'', antecedentes:'', alergias:'', edad:'' };
+    state.clinical = { referente: '', asa: 'ASA I (Normal, sano)', anticoagulante: 'No', antiTipo: 'Aspirina', antiDias: '', preparacion: 'Adecuado (Ayuno > 8h)' };
+    state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', instrumento: 'Olympus', trazProcesador: '', trazCana: '', trazLavado: '', extension: 'Duodeno D2' };
+    state.quality = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos', aeHipo: false, aeBradi: false, aePerf: false, aeSang: false };
     state.findings = [];
     state.procedimientos = [];
     state.images = [];
@@ -151,7 +176,10 @@ function resetForm() {
 
     // Reset UI
     document.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(el => {
-        if(!el.id.startsWith('login-')) el.value = (el.tagName === 'SELECT') ? el.options[0]?.value || '' : '';
+        if(!el.id.startsWith('login-')) {
+            if(el.type === 'checkbox') el.checked = false;
+            else el.value = (el.tagName === 'SELECT') ? el.options[0]?.value || '' : '';
+        }
     });
     
     // Re-set defaults for selects
@@ -165,6 +193,8 @@ function resetForm() {
         if(el) el.value = qualityDefaults[id];
     });
 
+    document.getElementById('anti-detalles').style.display = 'none';
+    
     updateTopbar();
     updateFindingsList();
     updateProcedimientosList();

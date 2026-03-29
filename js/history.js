@@ -153,13 +153,19 @@ async function loadFromHistory(id, silent = false) {
             'paciente-fnacimiento': state.patient.fnacimiento,
             'paciente-sexo': state.patient.sexo,
             'paciente-antecedentes': state.patient.antecedentes,
+            'paciente-alergias': state.patient.alergias,
             'clinico-referente': state.clinical.referente,
             'clinico-asa': state.clinical.asa,
             'clinico-anticoagulante': state.clinical.anticoagulante,
+            'clinico-anti-tipo': state.clinical.antiTipo,
+            'clinico-anti-dias': state.clinical.antiDias,
             'clinico-preparacion': state.clinical.preparacion,
             'indicacion': state.metadata.indicacion,
             'sedacion': state.metadata.sedacion,
             'instrumento': state.metadata.instrumento,
+            'traz-procesador': state.metadata.trazProcesador,
+            'traz-cana': state.metadata.trazCana,
+            'traz-lavado': state.metadata.trazLavado,
             'extension': state.metadata.extension,
             'calidad-consentimiento': state.quality.consentimiento,
             'calidad-fotos': state.quality.fotos,
@@ -173,6 +179,17 @@ async function loadFromHistory(id, silent = false) {
         Object.keys(fieldMap).forEach(key => {
             const el = document.getElementById(key);
             if(el) el.value = fieldMap[key] || '';
+        });
+
+        const antiDetalles = document.getElementById('anti-detalles');
+        if(antiDetalles) {
+            antiDetalles.style.display = state.clinical.anticoagulante === 'Sí' ? 'block' : 'none';
+        }
+
+        ['ae-hipo', 'ae-bradi', 'ae-perf', 'ae-sang'].forEach(id => {
+            const stateKey = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
+            const el = document.getElementById(id);
+            if(el) el.checked = state.quality[stateKey] === true;
         });
 
         // Special handling for geography

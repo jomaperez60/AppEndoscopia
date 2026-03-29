@@ -183,10 +183,16 @@
                                 </div>
                             </div>
                             <div class="form-grid full-width" style="margin-top: 16px;">
-                                <div class="input-group">
-                                    <label>Antecedentes y Alergias</label>
-                                    <textarea id="paciente-antecedentes" rows="2"
-                                        placeholder="Describa alergias, cirugías previas o comorbilidades patológicas"></textarea>
+                                <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                                    <div class="input-group">
+                                        <label>Alergias (Medicamentos / Látex)</label>
+                                        <input type="text" id="paciente-alergias" placeholder="Especifique alergias o escriba 'Ninguna'">
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Antecedentes Patológicos Previos</label>
+                                        <textarea id="paciente-antecedentes" rows="2"
+                                            placeholder="Describa cirugías previas o comorbilidades patológicas"></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -211,11 +217,28 @@
                                 </div>
                                 <div class="input-group">
                                     <label>Terapia Anticoagulante/Antiagregante</label>
-                                    <select id="clinico-anticoagulante">
+                                    <select id="clinico-anticoagulante" onchange="document.getElementById('anti-detalles').style.display = this.value === 'Sí' ? 'block' : 'none';">
                                         <option value="No" selected>No</option>
-                                        <option value="Sí, suspendida">Sí, suspendida</option>
-                                        <option value="Sí, activa">Sí, activa</option>
+                                        <option value="Sí">Sí</option>
                                     </select>
+                                </div>
+                                <div class="input-group" id="anti-detalles" style="display: none; grid-column: 1 / -1; background: #fffbeb; padding: 12px; border-left: 3px solid #f59e0b; border-radius: 4px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                        <div>
+                                            <label style="color: #b45309; font-size: 0.8rem; margin-bottom: 4px;">Tipo de Molécula</label>
+                                            <select id="clinico-anti-tipo" style="border-color: #fcd34d;">
+                                                <option value="Aspirina">Aspirina</option>
+                                                <option value="Clopidogrel (Plavix)">Clopidogrel (Plavix)</option>
+                                                <option value="Warfarina">Warfarina</option>
+                                                <option value="DOACs (Rivaroxabán, Apixabán)">DOACs (Rivaroxabán, Apixabán)</option>
+                                                <option value="Múltiple/Otro">Múltiple / Otro</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="color: #b45309; font-size: 0.8rem; margin-bottom: 4px;">Días Previos Suspendido</label>
+                                            <input type="number" id="clinico-anti-dias" placeholder="0" min="0" style="border-color: #fcd34d;">
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="input-group">
                                     <label>Preparación / Ayuno</label>
@@ -266,6 +289,22 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <h4 style="margin: 20px 0 10px 0; font-size: 0.95rem; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 5px;">Trazabilidad / Control de Infecciones</h4>
+                            <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                <div class="input-group">
+                                    <label>ID Procesador / Torre</label>
+                                    <input type="text" id="traz-procesador" placeholder="Ej. EVIS EXERA III">
+                                </div>
+                                <div class="input-group">
+                                    <label>ID Endoscopio / Caña (Serie)</label>
+                                    <input type="text" id="traz-cana" placeholder="Ej. GIF-H190 #12345">
+                                </div>
+                                <div class="input-group">
+                                    <label>Ciclo / Método Lavado</label>
+                                    <input type="text" id="traz-lavado" placeholder="Ej. Reprocesador Aut. C3">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -304,6 +343,24 @@
                                             < 7 minutos</option>
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin-top: 24px;">
+                            <h3><i class="fa-solid fa-triangle-exclamation"></i> Eventos Adversos (Complicaciones Inmediatas)</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                                    <input type="checkbox" id="ae-hipo" style="width: auto; height: 18px;"> Hipoxemia Documentada
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                                    <input type="checkbox" id="ae-bradi" style="width: auto; height: 18px;"> Bradicardia / Arritmia
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                                    <input type="checkbox" id="ae-perf" style="width: auto; height: 18px;"> Sospecha de Perforación
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">
+                                    <input type="checkbox" id="ae-sang" style="width: auto; height: 18px;"> Sangrado Post-intervención
+                                </label>
                             </div>
                         </div>
                     </div>

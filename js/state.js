@@ -14,19 +14,26 @@ const state = {
         departamento: '',
         municipio: '',
         antecedentes: '',
+        alergias: '',
         edad: ''
     },
     clinical: {
         referente: '',
         asa: 'ASA I (Normal, sano)',
         anticoagulante: 'No',
+        antiTipo: 'Aspirina',
+        antiDias: '',
         preparacion: 'Adecuado (Ayuno > 8h)'
     },
     quality: {
         consentimiento: 'Sí, obtenido y firmado',
         fotos: 'Estándar (≥ 10 fotos)',
         completa: 'Sí (incluye retrovisión)',
-        tiempo: '≥ 7 minutos'
+        tiempo: '≥ 7 minutos',
+        aeHipo: false,
+        aeBradi: false,
+        aePerf: false,
+        aeSang: false
     },
     images: [], // { data, x, y, id, label }
     selectedImageIndex: null,
@@ -35,6 +42,9 @@ const state = {
         indicacion: '',
         sedacion: 'Sedación Consciente',
         instrumento: 'Olympus',
+        trazProcesador: '',
+        trazCana: '',
+        trazLavado: '',
         extension: 'Duodeno D2'
     },
     findings: [],

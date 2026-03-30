@@ -162,6 +162,7 @@ async function loadFromHistory(id, silent = false) {
             'clinico-preparacion': state.clinical.preparacion,
             'indicacion': state.metadata.indicacion,
             'sedacion': state.metadata.sedacion,
+            'sedacion-por': state.metadata.sedacionPor || '',
             'instrumento': state.metadata.instrumento,
             'traz-procesador': state.metadata.trazProcesador,
             'traz-cana': state.metadata.trazCana,
@@ -191,6 +192,37 @@ async function loadFromHistory(id, silent = false) {
             const el = document.getElementById(id);
             if(el) el.checked = state.quality[stateKey] === true;
         });
+
+        const sedacionAplicadaBlock = document.getElementById('sedacion-aplicada');
+        if (sedacionAplicadaBlock) {
+            sedacionAplicadaBlock.style.display = (state.metadata.sedacion === 'Tópica / Ninguna' || !state.metadata.sedacion) ? 'none' : 'block';
+        }
+
+        // Sync Antecedentes checkboxes
+        document.querySelectorAll('.ant-enf-cb, .ant-cir-cb').forEach(cb => cb.checked = false);
+        const enfOtrosEl = document.getElementById('ant-enf-otros');
+        const cirOtrosEl = document.getElementById('ant-cir-otros');
+        if (enfOtrosEl) enfOtrosEl.value = '';
+        if (cirOtrosEl) cirOtrosEl.value = '';
+        
+        if (state.patient.antecedentes) {
+            const ant = state.patient.antecedentes;
+            document.querySelectorAll('.ant-enf-cb, .ant-cir-cb').forEach(cb => {
+                if (ant.includes(cb.value)) cb.checked = true;
+            });
+            const selAna = document.getElementById('sel-anastomosis');
+            const selBar = document.getElementById('sel-bariatrica');
+            if (selAna) {
+                selAna.style.display = ant.includes('Anastomosis gástrica') ? 'block' : 'none';
+                if (ant.includes('Billroth I')) selAna.value = 'Billroth I';
+                if (ant.includes('Billroth II')) selAna.value = 'Billroth II';
+            }
+            if (selBar) {
+                selBar.style.display = ant.includes('Cirugía bariátrica') ? 'block' : 'none';
+                if (ant.includes('Manga gástrica') && ant.includes('bariatrica')) selBar.value = 'Manga gástrica';
+                if (ant.includes('Bypass gástrico')) selBar.value = 'Bypass gástrico';
+            }
+        }
 
         // Special handling for geography
         const deptoSelect = document.getElementById('paciente-departamento');
@@ -315,7 +347,7 @@ async function newStudyFromHistory(id) {
         state.histology = '';
 
         // Limpiar inputs de la UI
-        const fieldsToClear = ['clinico-referente', 'indicacion', 'sedacion', 'instrumento', 'extension', 'diag-final', 'plan', 'histology-text'];
+        const fieldsToClear = ['clinico-referente', 'indicacion', 'sedacion', 'sedacion-por', 'instrumento', 'extension', 'diag-final', 'plan', 'histology-text'];
         fieldsToClear.forEach(fid => {
             const el = document.getElementById(fid);
             if(el) el.value = '';

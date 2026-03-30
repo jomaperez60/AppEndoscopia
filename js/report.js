@@ -364,6 +364,18 @@ function generateReport(skipSave = false, force = false) {
                     <td style="padding: 10px;">${state.metadata.indicacion || 'Escrutinio'}</td>
                 </tr>
                 <tr style="border: 1px solid #eee;">
+                    <td style="padding: 10px; font-weight: bold;">SEDACIÓN:</td>
+                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.metadata.sedacion || 'Ninguna'}${state.metadata.sedacionPor && state.metadata.sedacion !== 'Tópica / Ninguna' && state.metadata.sedacion !== '' ? ' (' + state.metadata.sedacionPor + ')' : ''}</td>
+                    <td style="padding: 10px; font-weight: bold;">EXTENSIÓN:</td>
+                    <td style="padding: 10px;">${state.metadata.extension || 'Duodeno D2'}</td>
+                </tr>
+                <tr style="border: 1px solid #eee;">
+                    <td style="padding: 10px; font-weight: bold;">ANTECEDENTES:</td>
+                    <td style="padding: 10px;" colspan="3">
+                        <div style="white-space: pre-wrap; font-size: 0.85rem;">${state.patient.antecedentes || 'Sin antecedentes quirúrgicos o patológicos reportados.'}</div>
+                    </td>
+                </tr>
+                <tr style="border: 1px solid #eee;">
                     <td style="padding: 10px; font-weight: bold;">TERAPIA ANTIAGREG.:</td>
                     <td style="padding: 10px;" colspan="3">
                         ${state.clinical.anticoagulante === 'Sí' ? 

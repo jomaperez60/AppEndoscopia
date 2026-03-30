@@ -23,11 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    ['indicacion', 'sedacion', 'instrumento', 'extension'].forEach(id => {
+    ['indicacion', 'sedacion', 'sedacion-por', 'instrumento', 'extension'].forEach(id => {
         const el = document.getElementById(id);
         if(el) {
+            const stateKey = id === 'sedacion-por' ? 'sedacionPor' : id;
             el.addEventListener(id === 'indicacion' ? 'input' : 'change', (e) => {
-                state.metadata[id] = e.target.value;
+                state.metadata[stateKey] = e.target.value;
             });
         }
     });
@@ -166,7 +167,7 @@ function resetForm() {
     state.currentStudyId = null;
     state.patient = { nombre:'', dni:'', fnacimiento:'', sexo:'', departamento:'', municipio:'', antecedentes:'', alergias:'', edad:'' };
     state.clinical = { referente: '', asa: 'ASA I (Normal, sano)', anticoagulante: 'No', antiTipo: 'Aspirina', antiDias: '', preparacion: 'Adecuado (Ayuno > 8h)' };
-    state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', instrumento: 'Olympus', trazProcesador: '', trazCana: '', trazLavado: '', extension: 'Duodeno D2' };
+    state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', sedacionPor: 'Gastroenterólogo', instrumento: 'Olympus', trazProcesador: '', trazCana: '', trazLavado: '', extension: 'Duodeno D2' };
     state.quality = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos', aeHipo: false, aeBradi: false, aePerf: false, aeSang: false };
     state.findings = [];
     state.procedimientos = [];
@@ -194,10 +195,46 @@ function resetForm() {
     });
 
     document.getElementById('anti-detalles').style.display = 'none';
-    
+    const sedacionPorEl = document.getElementById('sedacion-por');
+    if (sedacionPorEl) sedacionPorEl.value = 'Gastroenterólogo';
+    const sedacionAplicadaBlock = document.getElementById('sedacion-aplicada');
+    if (sedacionAplicadaBlock) sedacionAplicadaBlock.style.display = 'block';
+
+    const selAna = document.getElementById('sel-anastomosis');
+    if (selAna) selAna.style.display = 'none';
+    const selBar = document.getElementById('sel-bariatrica');
+    if (selBar) selBar.style.display = 'none';
     updateTopbar();
     updateFindingsList();
     updateProcedimientosList();
     renderGallery();
     switchMainView('new');
 }
+
+window.updateAntecedentesText = function() {
+    const enfTags = Array.from(document.querySelectorAll('.ant-enf-cb:checked')).map(cb => cb.value);
+    const enfOtros = document.getElementById('ant-enf-otros').value.trim();
+    if(enfOtros) enfTags.push(enfOtros);
+    
+    let enfText = enfTags.length > 0 ? "Enfermedades: " + enfTags.join(", ") : "";
+
+    const cirTags = Array.from(document.querySelectorAll('.ant-cir-cb:checked')).map(cb => {
+        if(cb.value === "Anastomosis gástrica") return "Anastomosis gástrica (" + document.getElementById('sel-anastomosis').value + ")";
+        if(cb.value === "Cirugía bariátrica") return "Cirugía bariátrica (" + document.getElementById('sel-bariatrica').value + ")";
+        return cb.value;
+    });
+    const cirOtros = document.getElementById('ant-cir-otros').value.trim();
+    if(cirOtros) cirTags.push(cirOtros);
+    
+    let cirText = cirTags.length > 0 ? "Cirugías previas: " + cirTags.join(", ") : "";
+
+    let combined = [enfText, cirText].filter(t => t).join("\n");
+    
+    const hiddenTextarea = document.getElementById('paciente-antecedentes');
+    if(hiddenTextarea) {
+        hiddenTextarea.value = combined;
+        // Trigger event to update state and topbar manually
+        state.patient.antecedentes = combined;
+        if(typeof updateTopbar === 'function') updateTopbar();
+    }
+};

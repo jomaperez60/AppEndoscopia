@@ -135,7 +135,8 @@
                         <button class="tab" data-target="histology">4. Histología</button>
                         <button class="tab" data-target="diagnoses">5. Conclusión</button>
                         <button class="tab" data-target="quality">6. Indicadores de Calidad</button>
-                        <button class="tab" data-target="images-tab">7. Registro de Imágenes</button>
+                        <button class="tab" data-target="eventos-adversos">7. Eventos Adversos</button>
+                        <button class="tab" data-target="images-tab">8. Registro de Imágenes</button>
                     </div>
 
                     <div class="tab-content active" id="metadata">
@@ -188,10 +189,49 @@
                                         <label>Alergias (Medicamentos / Látex)</label>
                                         <input type="text" id="paciente-alergias" placeholder="Especifique alergias o escriba 'Ninguna'">
                                     </div>
-                                    <div class="input-group">
+                                    <div class="input-group" style="grid-column: 1 / -1;">
                                         <label>Antecedentes Patológicos Previos</label>
-                                        <textarea id="paciente-antecedentes" rows="2"
-                                            placeholder="Describa cirugías previas o comorbilidades patológicas"></textarea>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                                            <!-- Enfermedades -->
+                                            <div>
+                                                <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--primary);"><i class="fa-solid fa-virus"></i> Enfermedades</h4>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                                                    <label class="tag-checkbox"><input type="checkbox" value="HAS" class="ant-enf-cb" onchange="updateAntecedentesText()"> HAS</label>
+                                                    <label class="tag-checkbox"><input type="checkbox" value="DM" class="ant-enf-cb" onchange="updateAntecedentesText()"> DM</label>
+                                                    <label class="tag-checkbox"><input type="checkbox" value="Cardiopatía" class="ant-enf-cb" onchange="updateAntecedentesText()"> Cardiopatía</label>
+                                                    <label class="tag-checkbox"><input type="checkbox" value="Nefropatía" class="ant-enf-cb" onchange="updateAntecedentesText()"> Nefropatía</label>
+                                                    <label class="tag-checkbox"><input type="checkbox" value="Cáncer" class="ant-enf-cb" onchange="updateAntecedentesText()"> Cáncer</label>
+                                                </div>
+                                                <input type="text" id="ant-enf-otros" placeholder="Otras enfermedades (escriba y presione Enter)..." style="width: 100%; font-size: 0.85rem; padding: 8px;" onchange="updateAntecedentesText()">
+                                            </div>
+                                            <!-- Cirugías -->
+                                            <div>
+                                                <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--primary);"><i class="fa-solid fa-scalpel"></i> Cirugías Previas</h4>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                                                    <label class="tag-checkbox"><input type="checkbox" value="Manga gástrica" class="ant-cir-cb" onchange="updateAntecedentesText()"> Manga gástrica</label>
+                                                    <label class="tag-checkbox"><input type="checkbox" value="Cirugía esofágica" class="ant-cir-cb" onchange="updateAntecedentesText()"> Cirugía esofágica</label>
+                                                    <label class="tag-checkbox"><input type="checkbox" value="Cirugía duodenal" class="ant-cir-cb" onchange="updateAntecedentesText()"> Cirugía duodenal</label>
+                                                    
+                                                    <div style="width: 100%; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                                        <label class="tag-checkbox"><input type="checkbox" id="cb-anastomosis" class="ant-cir-cb" value="Anastomosis gástrica" onchange="document.getElementById('sel-anastomosis').style.display = this.checked ? 'block' : 'none'; updateAntecedentesText();"> Anastomosis gástrica</label>
+                                                        <select id="sel-anastomosis" style="font-size: 0.8rem; padding: 4px; width: auto; display: none; height: auto; min-height: 0;" onchange="updateAntecedentesText()">
+                                                            <option value="Billroth I">Billroth I</option>
+                                                            <option value="Billroth II">Billroth II</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div style="width: 100%; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                                        <label class="tag-checkbox"><input type="checkbox" id="cb-bariatrica" class="ant-cir-cb" value="Cirugía bariátrica" onchange="document.getElementById('sel-bariatrica').style.display = this.checked ? 'block' : 'none'; updateAntecedentesText();"> Cirugía bariátrica</label>
+                                                        <select id="sel-bariatrica" style="font-size: 0.8rem; padding: 4px; width: auto; display: none; height: auto; min-height: 0;" onchange="updateAntecedentesText()">
+                                                            <option value="Manga gástrica">Manga gástrica</option>
+                                                            <option value="Bypass gástrico">Bypass gástrico</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <input type="text" id="ant-cir-otros" placeholder="Otras cirugías..." style="width: 100%; font-size: 0.85rem; padding: 8px;" onchange="updateAntecedentesText()">
+                                            </div>
+                                        </div>
+                                        <textarea id="paciente-antecedentes" style="display: none;"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -256,19 +296,29 @@
                                 <div class="input-group">
                                     <label>Indicación Principal</label>
                                     <div style="display: flex; gap: 8px;">
-                                        <input type="text" id="indicacion" placeholder="Seleccione o escriba..."
-                                            style="flex: 1;">
+                                        <input type="text" id="indicacion" placeholder="Seleccione con el botón..."
+                                            style="flex: 1;" readonly>
                                         <button class="btn btn-secondary" onclick="openIndications()"
                                             style="padding: 0 12px;"><i class="fa-solid fa-list-ul"></i></button>
                                     </div>
                                 </div>
                                 <div class="input-group">
                                     <label>Sedación / Anestesia</label>
-                                    <select id="sedacion">
+                                    <select id="sedacion" onchange="document.getElementById('sedacion-aplicada').style.display = (this.value === 'Tópica / Ninguna' || this.value === '') ? 'none' : 'block';">
                                         <option value="Tópica / Ninguna">Ninguna / Tópica</option>
                                         <option value="Sedación Consciente" selected>Sedación Consciente</option>
                                         <option value="Sedación Profunda">Sedación Profunda</option>
                                         <option value="Anestesia General">Anestesia General</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" id="sedacion-aplicada">
+                                    <label>Sedación Aplicada Por</label>
+                                    <select id="sedacion-por">
+                                        <option value="">Seleccione...</option>
+                                        <option value="Enfermera">Enfermera</option>
+                                        <option value="Gastroenterólogo" selected>Gastroenterólogo</option>
+                                        <option value="Anestesiólogo">Anestesiólogo</option>
+                                        <option value="Técnico en anestesia">Técnico en anestesia</option>
                                     </select>
                                 </div>
                                 <div class="input-group">
@@ -282,8 +332,8 @@
                                 <div class="input-group">
                                     <label>Extensión del Examen / Límites</label>
                                     <div style="display: flex; gap: 8px;">
-                                        <input type="text" id="extension" placeholder="Seleccione o escriba..."
-                                            style="flex: 1;">
+                                        <input type="text" id="extension" placeholder="Seleccione con el botón..."
+                                            style="flex: 1;" readonly>
                                         <button class="btn btn-secondary" onclick="openFindings('Exploración')"
                                             style="padding: 0 12px;"><i class="fa-solid fa-list-ul"></i></button>
                                     </div>
@@ -346,7 +396,12 @@
                             </div>
                         </div>
 
-                        <div class="card" style="margin-top: 24px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="eventos-adversos" style="display: none;">
+                        <div class="card">
                             <h3><i class="fa-solid fa-triangle-exclamation"></i> Eventos Adversos (Complicaciones Inmediatas)</h3>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-main);">

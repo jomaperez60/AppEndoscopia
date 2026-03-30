@@ -246,6 +246,23 @@ select:focus, input:focus, textarea:focus { border-color: var(--primary); }
 #diag-final { font-size: 1.2rem; font-weight: 600; line-height: 1.6; color: var(--text-main); }
 .auto-filled { background-color: rgba(0, 0, 0, 0.02); border-style: dashed; cursor: not-allowed; }
 
+.tag-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    background: var(--bg-card);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+.tag-checkbox:hover { border-color: var(--primary); }
+.tag-checkbox input[type="checkbox"] { margin: 0; width: auto; }
+
+
 .anatomy-selector { margin-bottom: 24px; }
 .organ-btns { display: flex; gap: 12px; }
 .findings-list { background-color: var(--bg-card); border-radius: var(--radius-lg); padding: 24px; min-height: 200px; border: 1px solid var(--border); }

@@ -197,25 +197,51 @@
                             </button>
                         </div>
                         
-                        <div id="live-capture-container" style="flex: 1; position: relative; display: none; background: #000; min-height: 0;">
-                            <video id="live-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: contain;"></video>
-                            
-                            <!-- Crop Overlay -->
-                            <div id="crop-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
-                                <div id="crop-box" style="position: absolute; border: 2px dashed #ef4444; cursor: move; pointer-events: all; box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);">
-                                    <!-- Handles -->
-                                    <div class="resizer tl" style="position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; background: #ef4444; cursor: nw-resize; border-radius: 50%;"></div>
-                                    <div class="resizer tr" style="position: absolute; right: -6px; top: -6px; width: 12px; height: 12px; background: #ef4444; cursor: ne-resize; border-radius: 50%;"></div>
-                                    <div class="resizer bl" style="position: absolute; left: -6px; bottom: -6px; width: 12px; height: 12px; background: #ef4444; cursor: sw-resize; border-radius: 50%;"></div>
-                                    <div class="resizer br" style="position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: #ef4444; cursor: se-resize; border-radius: 50%;"></div>
-                                    <div class="resizer t" style="position: absolute; left: 50%; top: -6px; transform: translateX(-50%); width: 12px; height: 12px; background: #ef4444; cursor: n-resize; border-radius: 50%;"></div>
-                                    <div class="resizer b" style="position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); width: 12px; height: 12px; background: #ef4444; cursor: s-resize; border-radius: 50%;"></div>
-                                    <div class="resizer l" style="position: absolute; left: -6px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background: #ef4444; cursor: w-resize; border-radius: 50%;"></div>
-                                    <div class="resizer r" style="position: absolute; right: -6px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background: #ef4444; cursor: e-resize; border-radius: 50%;"></div>
+                        <div id="live-capture-container" style="flex: 1; position: relative; display: none; background: #000; min-height: 0; align-items: center; justify-content: center;">
+                            <div id="video-stage" style="position: relative; display: inline-block; max-width: 100%; max-height: 100%; line-height: 0;">
+                                <video id="live-video" autoplay playsinline muted style="display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;"></video>
+                                
+                                <!-- Crop Overlay -->
+                                <div id="crop-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                                    <div id="crop-box" style="position: absolute; border: 2px dashed #ef4444; cursor: move; pointer-events: all; box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);">
+                                        <!-- Handles -->
+                                        <div class="resizer tl" style="position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; background: #ef4444; cursor: nw-resize; border-radius: 50%;"></div>
+                                        <div class="resizer tr" style="position: absolute; right: -6px; top: -6px; width: 12px; height: 12px; background: #ef4444; cursor: ne-resize; border-radius: 50%;"></div>
+                                        <div class="resizer bl" style="position: absolute; left: -6px; bottom: -6px; width: 12px; height: 12px; background: #ef4444; cursor: sw-resize; border-radius: 50%;"></div>
+                                        <div class="resizer br" style="position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: #ef4444; cursor: se-resize; border-radius: 50%;"></div>
+                                        <div class="resizer t" style="position: absolute; left: 50%; top: -6px; transform: translateX(-50%); width: 12px; height: 12px; background: #ef4444; cursor: n-resize; border-radius: 50%;"></div>
+                                        <div class="resizer b" style="position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); width: 12px; height: 12px; background: #ef4444; cursor: s-resize; border-radius: 50%;"></div>
+                                        <div class="resizer l" style="position: absolute; left: -6px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background: #ef4444; cursor: w-resize; border-radius: 50%;"></div>
+                                        <div class="resizer r" style="position: absolute; right: -6px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background: #ef4444; cursor: e-resize; border-radius: 50%;"></div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <button onclick="captureFrame()" style="position: absolute; right: 20px; bottom: 20px; width: 60px; height: 60px; border-radius: 50%; background: #ef4444; color: white; border: 3px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100;" title="Capturar Imagen (Espacio o Botón Endoscopio)">
+                            <!-- New: Control Panel below Video -->
+                            <div id="capture-controls" style="margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border: 1px solid #333; display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 600px;">
+                                <div style="display: flex; gap: 15px; align-items: flex-end;">
+                                    <div style="flex: 1;">
+                                        <label style="display: block; font-size: 0.7rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: bold;">Calidad de JPEG</label>
+                                        <select id="capture-quality-select" style="background: #222; border: 1px solid #444; color: white; padding: 6px; font-size: 0.8rem; border-radius: 4px; width: 100%;">
+                                            <option value="0.8">Alta (80% - Recomendado)</option>
+                                            <option value="0.6">Media (60%)</option>
+                                            <option value="1.0">Original (100%)</option>
+                                        </select>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label style="display: block; font-size: 0.7rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: bold;">Botón Endoscopio</label>
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            <code id="current-capture-key" style="background: #111; color: #ef4444; padding: 6px 12px; border: 1px solid #333; border-radius: 4px; font-weight: bold; font-family: monospace;">F12</code>
+                                            <button class="btn btn-secondary" onclick="startKeyLearning()" id="learn-key-btn" style="padding: 6px 12px; font-size: 0.8rem; flex: 1;">
+                                                <i class="fa-solid fa-keyboard"></i> Vincular
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p style="margin: 0; font-size: 0.7rem; color: #555; text-align: center;">Mapee el botón físico de su cámara para disparar sin usar el mouse.</p>
+                            </div>
+
+                            <button onclick="captureFrame()" style="position: absolute; right: 20px; top: 105px; width: 60px; height: 60px; border-radius: 50%; background: #ef4444; color: white; border: 3px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100;" title="Capturar Imagen (Espacio o Botón Endoscopio)">
                                 <i class="fa-solid fa-camera" style="font-size: 1.5rem;"></i>
                             </button>
                         </div>
@@ -927,30 +953,10 @@
                             </div>
                         </div>
                         
-                        <div class="card" style="margin-top: 20px;">
-                            <h3 style="margin-top: 0; color: #1e3a8a; display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-camera"></i> Captura de Video e Interfaz Física</h3>
-                            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Configure el comportamiento de la capturadora de video y el botón físico del endoscopio.</p>
-                            
-                            <div class="form-grid">
-                                <div class="input-group">
-                                    <label>Calidad de Captura</label>
-                                    <select class="btn btn-secondary" style="width: 100%; text-align: left; background: white; color: #333;">
-                                        <option value="0.8">Alta (Recomendado - 80%)</option>
-                                        <option value="0.6">Media (60%)</option>
-                                        <option value="1.0">Original (Sin compresión)</option>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>Tecla de Disparo Actual</label>
-                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                        <code id="current-capture-key" style="background: #f1f5f9; padding: 5px 15px; border-radius: 4px; font-weight: bold; color: #ef4444; border: 1px solid #e2e8f0; min-width: 60px; text-align: center;">F12</code>
-                                        <button class="btn btn-secondary" onclick="startKeyLearning()" id="learn-key-btn">
-                                            <i class="fa-solid fa-keyboard"></i> Vincular Botón Endoscopio
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                       \u0020
+                        \u0020
+                        // Panel removido de aquí y movido a la pestaña de imágenes para mejor ergonomía
+
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">

@@ -136,8 +136,12 @@ function captureFrame() {
     // Dibujar el cuadro recortado
     ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
 
-    // Convertir a DataURL (JPEG 70%)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    // Obtener calidad seleccionada por el usuario
+    const qualityEl = document.getElementById('capture-quality-select');
+    const quality = qualityEl ? parseFloat(qualityEl.value) : 0.8;
+
+    // Convertir a DataURL (JPEG con calidad dinámica)
+    const dataUrl = canvas.toDataURL('image/jpeg', quality);
 
     // Añadir al estado
     state.images.push({

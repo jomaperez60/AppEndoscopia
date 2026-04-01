@@ -11,8 +11,10 @@ const state = {
         dni: '',
         fnacimiento: '',
         sexo: '',
+        pais: 'Honduras',
         departamento: '',
         municipio: '',
+        localidad: '',
         antecedentes: '',
         alergias: '',
         edad: ''
@@ -37,6 +39,11 @@ const state = {
     },
     images: [], // { data, x, y, id, label }
     selectedImageIndex: null,
+    // Video Capture Settings
+    captureDeviceId: '',
+    captureCrop: { x: 10, y: 10, width: 80, height: 80 }, // Porcentaje
+    captureKey: 'F12', // Tecla por defecto (común en software médico)
+    isCapturing: false,
     history: JSON.parse(localStorage.getItem('endo_history') || '[]'),
     metadata: {
         indicacion: '',

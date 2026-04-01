@@ -91,8 +91,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const diagFinalEl = document.getElementById('diag-final');
     if (diagFinalEl) diagFinalEl.addEventListener('input', (e) => state.metadata.diagFinal = e.target.value);
 
+    const paisSelect = document.getElementById('paciente-pais');
+    const localidadGroup = document.getElementById('localidad-group');
+    const localidadInput = document.getElementById('paciente-localidad');
     const deptoSelect = document.getElementById('paciente-departamento');
     const muniSelect = document.getElementById('paciente-municipio');
+
+    const countries = [
+        "Honduras", "Estados Unidos", "Afganistán", "Albania", "Alemania", "Andorra", "Angola", "Antigua y Barbuda", "Arabia Saudita", "Argelia", "Argentina", "Armenia", "Australia", "Austria", "Azerbaiyán", "Bahamas", "Bangladés", "Barbados", "Baréin", "Bélgica", "Belice", "Benín", "Bielorrusia", "Birmania/Myanmar", "Bolivia", "Bosnia y Herzegovina", "Botsuana", "Brasil", "Brunéi", "Bulgaria", "Burkina Faso", "Burundi", "Bután", "Cabo Verde", "Camboya", "Camerún", "Canadá", "Catar", "Chad", "Chile", "China", "Chipre", "Ciudad del Vaticano", "Colombia", "Comoras", "Corea del Norte", "Corea del Sur", "Costa de Marfil", "Costa Rica", "Croacia", "Cuba", "Dinamarca", "Dominica", "Ecuador", "Egipto", "El Salvador", "Emiratos Árabes Unidos", "Eritrea", "Eslovaquia", "Eslovenia", "España", "Estonia", "Etiopía", "Filipinas", "Finlandia", "Fiyi", "Francia", "Gabón", "Gambia", "Georgia", "Ghana", "Granada", "Grecia", "Guatemala", "Guyana", "Guinea", "Guinea ecuatorial", "Guinea-Bisáu", "Haití", "Hungría", "India", "Indonesia", "Irak", "Irán", "Irlanda", "Islandia", "Islas Marshall", "Islas Salomón", "Israel", "Italia", "Jamaica", "Japón", "Jordania", "Kazajistán", "Kenia", "Kirguistán", "Kiribati", "Kuwait", "Laos", "Lesoto", "Letonia", "Líbano", "Liberia", "Libia", "Liechtenstein", "Lituania", "Luxemburgo", "Macedonia del Norte", "Madagascar", "Malasia", "Malaui", "Maldivas", "Malí", "Malta", "Marruecos", "Mauricio", "Mauritania", "México", "Micronesia", "Moldavia", "Mónaco", "Mongolia", "Montenegro", "Mozambique", "Namibia", "Nauru", "Nepal", "Nicaragua", "Níger", "Nigeria", "Noruega", "Nueva Zelanda", "Omán", "Países Bajos", "Pakistán", "Palaos", "Panamá", "Papúa Nueva Guinea", "Paraguay", "Perú", "Polonia", "Portugal", "Reino Unido", "República Centroafricana", "República Checa", "República del Congo", "República Democrática del Congo", "República Dominicana", "Ruanda", "Rumanía", "Rusia", "Samoa", "San Cristóbal y Nieves", "San Marino", "San Vicente y las Granadinas", "Santa Lucía", "Santo Tomé y Príncipe", "Senegal", "Serbia", "Seychelles", "Sierra Leona", "Singapur", "Siria", "Somalia", "Sri Lanka", "Suazilandia", "Sudáfrica", "Sudán", "Sudán del Sur", "Suecia", "Suiza", "Surinam", "Tailandia", "Tanzania", "Tayikistán", "Timor Oriental", "Togo", "Tonga", "Trinidad y Tobago", "Túnez", "Turkmenistán", "Turquía", "Tuvalu", "Ucrania", "Uganda", "Uruguay", "Uzbekistán", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Yibuti", "Zambia", "Zimbabue"
+    ];
+
+    if (paisSelect) {
+        countries.forEach(country => {
+            const opt = document.createElement('option');
+            opt.value = country;
+            opt.innerText = country;
+            paisSelect.appendChild(opt);
+        });
+
+        paisSelect.value = state.patient.pais || 'Honduras';
+
+        const updateVisibilityByCountry = (country) => {
+            if (country === 'Honduras') {
+                deptoSelect.disabled = false;
+                muniSelect.disabled = !state.patient.departamento;
+                localidadGroup.style.display = 'none';
+            } else {
+                deptoSelect.disabled = true;
+                muniSelect.disabled = true;
+                deptoSelect.value = '';
+                muniSelect.value = '';
+                state.patient.departamento = '';
+                state.patient.municipio = '';
+                localidadGroup.style.display = 'block';
+            }
+        };
+
+        paisSelect.addEventListener('change', (e) => {
+            state.patient.pais = e.target.value;
+            updateVisibilityByCountry(e.target.value);
+            updateTopbar();
+        });
+
+        updateVisibilityByCountry(state.patient.pais);
+    }
+
+    if (localidadInput) {
+        ['input', 'change'].forEach(ev => {
+            localidadInput.addEventListener(ev, (e) => {
+                state.patient.localidad = e.target.value;
+            });
+        });
+    }
 
     if (deptoSelect && typeof hondurasGeo !== 'undefined') {
         Object.keys(hondurasGeo).sort().forEach(depto => {
@@ -164,8 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function resetForm() {
     if (!confirm("¿Desea limpiar el formulario para un nuevo estudio? Se perderán los datos no guardados.")) return;
 
-    state.currentStudyId = null;
-    state.patient = { nombre: '', dni: '', fnacimiento: '', sexo: '', departamento: '', municipio: '', antecedentes: '', alergias: '', edad: '' };
+    state.currentStudyId = null; // IMPORTANTE: Null asegura que sea un registro nuevo
+    state.patient = { nombre: '', dni: '', fnacimiento: '', sexo: '', pais: 'Honduras', departamento: '', municipio: '', localidad: '', antecedentes: '', alergias: '', edad: '' };
     state.clinical = { referente: '', asa: 'ASA I (Normal, sano)', anticoagulante: 'No', antiTipo: 'Aspirina', antiDias: '', preparacion: 'Adecuado (Ayuno > 8h)' };
     state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', sedacionPor: 'Gastroenterólogo', instrumento: 'Olympus', trazProcesador: '', trazCana: '', trazLavado: '', extension: 'Duodeno D2' };
     state.quality = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos', aeHipo: false, aeBradi: false, aePerf: false, aeSang: false };
@@ -173,6 +223,7 @@ function resetForm() {
     state.procedimientos = [];
     state.images = [];
     state.plan = '';
+    state.histology = '';
     state.selectedImageIndex = null;
 
     // Reset UI
@@ -182,6 +233,13 @@ function resetForm() {
             else el.value = (el.tagName === 'SELECT') ? el.options[0]?.value || '' : '';
         }
     });
+
+    const paisSelect = document.getElementById('paciente-pais');
+    if (paisSelect) {
+        paisSelect.value = 'Honduras';
+        const event = new Event('change');
+        paisSelect.dispatchEvent(event);
+    }
 
     // Re-set defaults for selects
     ['asa', 'anticoagulante', 'preparacion'].forEach(id => {

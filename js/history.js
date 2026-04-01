@@ -152,6 +152,8 @@ async function loadFromHistory(id, silent = false) {
             'paciente-dni': state.patient.dni,
             'paciente-fnacimiento': state.patient.fnacimiento,
             'paciente-sexo': state.patient.sexo,
+            'paciente-pais': state.patient.pais,
+            'paciente-localidad': state.patient.localidad,
             'paciente-antecedentes': state.patient.antecedentes,
             'paciente-alergias': state.patient.alergias,
             'clinico-referente': state.clinical.referente,
@@ -181,6 +183,12 @@ async function loadFromHistory(id, silent = false) {
             const el = document.getElementById(key);
             if (el) el.value = fieldMap[key] || '';
         });
+
+        // Trigger country change logic
+        const paisSelect = document.getElementById('paciente-pais');
+        if (paisSelect) {
+            paisSelect.dispatchEvent(new Event('change'));
+        }
 
         const antiDetalles = document.getElementById('anti-detalles');
         if (antiDetalles) {
@@ -368,9 +376,18 @@ async function newStudyFromHistory(id) {
         });
 
         const deptoSelect = document.getElementById('paciente-departamento');
+        const paisSelect = document.getElementById('paciente-pais');
+        if (paisSelect) {
+            paisSelect.value = state.patient.pais || 'Honduras';
+            paisSelect.dispatchEvent(new Event('change'));
+            
+            if (state.patient.localidad) {
+                const locEl = document.getElementById('paciente-localidad');
+                if (locEl) locEl.value = state.patient.localidad;
+            }
+        }
+
         if (deptoSelect && state.patient.departamento) {
-            deptoSelect.value = state.patient.departamento;
-            deptoSelect.dispatchEvent(new Event('change'));
             setTimeout(() => {
                 const muniSelect = document.getElementById('paciente-municipio');
                 if (muniSelect) muniSelect.value = state.patient.municipio || '';

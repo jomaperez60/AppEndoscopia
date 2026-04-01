@@ -50,7 +50,10 @@ function handleImageUpload(e) {
 
 function renderGallery() {
     const list = document.getElementById('gallery-list');
+    const countEl = document.getElementById('gallery-count');
     if(!list) return;
+    
+    if (countEl) countEl.innerText = state.images.length;
     
     if (state.images.length === 0) {
         list.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); margin-top: 50px;">Cargue imágenes para comenzar el mapeo.</p>';

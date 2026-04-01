@@ -139,6 +139,120 @@
                         <button class="tab" data-target="images-tab">8. Registro de Imágenes</button>
                     </div>
 
+            <style>
+                .image-workspace {
+                    display: grid;
+                    grid-template-columns: 310px 1fr 1fr;
+                    height: 100%;
+                    gap: 0;
+                    background: #f0f2f5;
+                }
+
+                @media (max-width: 768px) {
+                    #images-tab {
+                        height: auto !important;
+                        overflow-y: auto !important;
+                    }
+                    .image-workspace {
+                        grid-template-columns: 1fr;
+                        height: auto;
+                    }
+                    .capture-panel {
+                        display: none !important;
+                    }
+                    #gi-diagram-img {
+                        max-height: 300px !important;
+                    }
+                }
+            </style>
+            <div id="images-tab" class="tab-content" style="display: none; height: calc(100vh - 140px); overflow: hidden; padding: 0;">
+                <div class="image-workspace">
+                    <!-- Panel Izquierdo: Galería -->
+                    <div style="background: white; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; overflow: hidden;">
+                        <div style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <h4 style="margin: 0; font-size: 0.9rem; color: #555;">Galería de Imágenes</h4>
+                            <div style="background: #e1f5fe; color: #01579b; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+                                <span id="gallery-count">0</span> / 12
+                            </div>
+                        </div>
+                        <div id="gallery-list" class="gallery-grid" style="flex: 1; overflow-y: auto; padding: 10px; align-content: flex-start;">
+                            <!-- Tiles will be added here -->
+                        </div>
+                        <div style="padding: 10px; border-top: 1px solid #eee; background: #fafafa;">
+                            <label class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+                                <i class="fa-solid fa-upload"></i> Subir Imágenes
+                                <input type="file" multiple accept="image/*" id="image-upload" style="display: none;" onchange="handleImageUpload(event)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Panel Central: Captura en Vivo / Previsualización -->
+                    <div class="capture-panel" style="background: #111; display: flex; flex-direction: column; position: relative; overflow: hidden;">
+                        <div style="padding: 10px; background: #222; border-bottom: 1px solid #333; display: flex; gap: 10px;">
+                            <select id="capture-device-select" class="btn btn-secondary" style="flex: 1; background: #333; box-shadow: none; color: white; border-color: #444; font-size: 0.8rem; height: 32px;">
+                                <option value="">Detectando Dispositivos...</option>
+                            </select>
+                            <button id="toggle-webcam-btn" class="btn btn-secondary" onclick="toggleLiveCapture()" style="font-size: 0.8rem; height: 32px; white-space: nowrap;">
+                                <i class="fa-solid fa-video"></i> Iniciar Cámara
+                            </button>
+                        </div>
+                        
+                        <div id="live-capture-container" style="flex: 1; position: relative; display: none; background: #000; min-height: 0;">
+                            <video id="live-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+                            
+                            <!-- Crop Overlay -->
+                            <div id="crop-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                                <div id="crop-box" style="position: absolute; border: 2px solid #ef4444; cursor: move; pointer-events: all; box-shadow: 0 0 0 2000px rgba(0,0,0,0.5);">
+                                    <div class="resizer" style="position: absolute; right: -5px; bottom: -5px; width: 10px; height: 10px; background: #ef4444; cursor: nwse-resize;"></div>
+                                </div>
+                            </div>
+
+                            <button onclick="captureFrame()" style="position: absolute; right: 20px; bottom: 20px; width: 60px; height: 60px; border-radius: 50%; background: #ef4444; color: white; border: 3px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100;" title="Capturar Imagen (Espacio o Botón Endoscopio)">
+                                <i class="fa-solid fa-camera" style="font-size: 1.5rem;"></i>
+                            </button>
+                        </div>
+
+                        <div id="no-signal-msg" style="flex: 1; display: flex; align-items: center; justify-content: center; color: #444; flex-direction: column;">
+                            <i class="fa-solid fa-video-slash" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                            <p>Señal de video inactiva.</p>
+                        </div>
+                    </div>
+
+                    <!-- Panel Derecho: Mapeo -->
+                    <div style="background: white; border-left: 1px solid #e0e0e0; display: flex; flex-direction: column; overflow: hidden; min-width: 310px;">
+                        <div style="padding: 15px; border-bottom: 1px solid #eee;">
+                            <h4 style="margin: 0; font-size: 0.9rem; color: #555;">Mapeo de Hallazgos</h4>
+                        </div>
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: #fcfcfc; padding: 10px; position: relative; overflow: hidden;">
+                            <div class="mapping-container" style="position: relative; max-width: 100%; background: white; padding: 5px; border-radius: 8px; border: 1px solid #eee; overflow: hidden;">
+                                <img src="gi_diagram.png" id="gi-diagram-img" style="display: block; max-height: calc(100vh - 450px); width: auto; pointer-events: none;">
+                                <svg id="tag-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none;"
+                                     onmousedown="handleTagMouseDown(event)" onmousemove="handleTagMouseMove(event)" 
+                                     onmouseup="handleTagMouseUp(event)" onmouseleave="handleTagMouseUp(event)">
+                                </svg>
+                            </div>
+                        </div>
+                        <div id="label-controls" style="padding: 15px; border-top: 1px solid #eee; background: #fafafa; overflow-y: auto;">
+                            <p style="margin: 0 0 8px 0; font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase;">Etiquetado Rápido</p>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;" id="quick-label-btns">
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Normal')">Normal</button>
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Pólipo')">Pólipo</button>
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Erosiones')">Erosiones</button>
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Úlcera')">Úlcera</button>
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Várices')">Várices</button>
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Barrett')">Barrett</button>
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Hernia Hiatal')">Hernia</button>
+                                <button class="mst-btn" style="font-size: 0.75rem; padding: 5px;" onclick="assignLabel('Gastropatía')">Gastropatía</button>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; gap: 5px;">
+                                <input type="text" id="custom-label-text" placeholder="Otra..." style="flex: 1; font-size: 0.8rem; padding: 6px;">
+                                <button class="btn btn-secondary btn-icon" onclick="assignCustomLabel()"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
                     <div class="tab-content active" id="metadata">
                         <div class="card">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -171,6 +285,12 @@
                                     </select>
                                 </div>
                                 <div class="input-group">
+                                    <label>País</label>
+                                    <select id="paciente-pais">
+                                        <!-- Will be populated by JS -->
+                                    </select>
+                                </div>
+                                <div class="input-group">
                                     <label>Departamento de Honduras</label>
                                     <select id="paciente-departamento">
                                         <option value="">Seleccione Depto...</option>
@@ -181,6 +301,10 @@
                                     <select id="paciente-municipio" disabled>
                                         <option value="">Seleccione Municipio...</option>
                                     </select>
+                                </div>
+                                <div class="input-group" id="localidad-group" style="display: none;">
+                                    <label>Localidad / Ciudad / Estado</label>
+                                    <input type="text" id="paciente-localidad" placeholder="Ej. Miami, FL / San José, CR">
                                 </div>
                             </div>
                             <div class="form-grid full-width" style="margin-top: 16px;">
@@ -417,73 +541,7 @@
                         </div>
                     </div>
 
-                    <!-- Pestaña de Registro de Imágenes (Workstation Style) -->
-                    <div class="tab-content" id="images-tab" style="display: none;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 style="margin: 0;"><i class="fa-solid fa-camera"></i> Registro Fotográfico y Mapeo</h3>
-                            <div class="upload-btn-wrapper">
-                                <button class="btn btn-secondary" style="position: relative; overflow: hidden;">
-                                    <i class="fa-solid fa-upload"></i> Capturar / Subir Imágenes
-                                    <input type="file" id="image-input" accept="image/*" multiple
-                                        onchange="handleImageUpload(event)"
-                                        style="position: absolute; font-size: 100px; opacity: 0; right: 0; top: 0; cursor: pointer;" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="image-workspace" style="display: flex; gap: 20px; height: 600px;">
-                            <div class="gallery-grid" id="gallery-list"
-                                style="flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); border: 1px solid var(--border);">
-                                <p
-                                    style="grid-column: 1/-1; text-align: center; color: var(--text-muted); margin-top: 50px;">
-                                    Cargue imágenes para comenzar el mapeo.</p>
-                            </div>
-
-                            <div class="labels-sidebar" id="quick-labels"
-                                style="width: 200px; background: var(--bg-card); border: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 10px; border-radius: var(--radius-md);">
-                                <span
-                                    style="font-size: 0.75rem; font-weight: bold; color: var(--primary); text-transform: uppercase;">Etiquetas
-                                    Rápidas</span>
-                                <button class="mst-btn" onclick="assignLabel('Normal')">Normal</button>
-                                <button class="mst-btn" onclick="assignLabel('Pólipo')">Pólipo</button>
-                                <button class="mst-btn" onclick="assignLabel('Erosiones')">Erosiones</button>
-                                <button class="mst-btn" onclick="assignLabel('Úlcera')">Úlcera</button>
-                                <button class="mst-btn" onclick="assignLabel('Várices')">Várices</button>
-                                <button class="mst-btn" onclick="assignLabel('Barrett')">Barrett</button>
-                                <button class="mst-btn" onclick="assignLabel('Hernia Hiatal')">Hernia Hiatal</button>
-
-                                <span
-                                    style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-top: 10px;">Personalizada</span>
-                                <input type="text" id="custom-label-text" placeholder="Escribir..."
-                                    style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: white; font-size: 0.8rem;">
-                                <button class="btn btn-secondary" onclick="assignCustomLabel()"
-                                    style="width: 100%; justify-content: center; font-size: 11px;">Aplicar
-                                    Texto</button>
-
-                                <hr style="border: 0; border-top: 1px solid var(--border); margin: 5px 0;">
-                                <button class="btn btn-outline" onclick="clearAllTags()"
-                                    style="font-size: 11px;">Limpiar Marcas</button>
-                                <button class="btn btn-outline" onclick="state.images = []; renderGallery();"
-                                    style="font-size: 11px; border-color: var(--danger); color: var(--danger);">Borrar
-                                    Todo</button>
-                            </div>
-
-                            <div class="diagram-panel" id="diagram-workspace"
-                                style="width: 400px; background: white; border-radius: var(--radius-md); position: relative; border: 2px solid var(--border); overflow: hidden;">
-                                <div id="gi-diagram-container"
-                                    style="position: relative; width: 100%; height: 100%; padding: 10px; display: flex; align-items: center; justify-content: center;">
-                                    <img src="gi_diagram.png" id="gi-diagram-img" alt="Diagrama GI"
-                                        style="width: 100%; height: 100%; object-fit: contain; display: block;">
-                                    <svg id="tag-overlay"
-                                        style="position: absolute; top:0; left:0; width:100%; height:100%; cursor: crosshair; touch-action: none;"
-                                        onmousedown="handleTagMouseDown(event)" onmousemove="handleTagMouseMove(event)"
-                                        onmouseup="handleTagMouseUp(event)" onmouseleave="handleTagMouseUp(event)">
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Pestaña de Registro de Imágenes (Eliminada duplicada) -->
 
                     <div class="tab-content" id="findings" style="display: none;">
                         <div class="anatomy-selector">
@@ -860,6 +918,31 @@
                                 </select>
                             </div>
                         </div>
+                        
+                        <div class="card" style="margin-top: 20px;">
+                            <h3 style="margin-top: 0; color: #1e3a8a; display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-camera"></i> Captura de Video e Interfaz Física</h3>
+                            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Configure el comportamiento de la capturadora de video y el botón físico del endoscopio.</p>
+                            
+                            <div class="form-grid">
+                                <div class="input-group">
+                                    <label>Calidad de Captura</label>
+                                    <select class="btn btn-secondary" style="width: 100%; text-align: left; background: white; color: #333;">
+                                        <option value="0.8">Alta (Recomendado - 80%)</option>
+                                        <option value="0.6">Media (60%)</option>
+                                        <option value="1.0">Original (Sin compresión)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Tecla de Disparo Actual</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <code id="current-capture-key" style="background: #f1f5f9; padding: 5px 15px; border-radius: 4px; font-weight: bold; color: #ef4444; border: 1px solid #e2e8f0; min-width: 60px; text-align: center;">F12</code>
+                                        <button class="btn btn-secondary" onclick="startKeyLearning()" id="learn-key-btn">
+                                            <i class="fa-solid fa-keyboard"></i> Vincular Botón Endoscopio
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
@@ -934,6 +1017,7 @@
     <script src="js/ui.js?v=2"></script>
     <script src="js/users.js?v=2"></script>
     <script src="js/images.js?v=2"></script>
+    <script src="js/webcam.js"></script>
     <script src="js/history.js?v=2"></script>
     <script src="js/findings.js?v=2"></script>
     <script src="js/report.js?v=2"></script>

@@ -192,7 +192,7 @@ app.get('/studies/export/csv', authMiddleware, async (req, res) => {
   try {
     const studiesResult = await db.query(`
       SELECT s.id as study_id, s.created_at as fecha, 
-             p.nombre, p.dni, p.sexo, p.municipio, p.departamento, v.payload
+             p.nombre, p.dni, p.sexo, p.pais, p.municipio, p.departamento, p.localidad, v.payload
       FROM studies s
       JOIN patients p ON s.patient_id = p.id
       JOIN study_versions v ON s.id = v.study_id AND s.current_version = v.version
@@ -202,7 +202,7 @@ app.get('/studies/export/csv', authMiddleware, async (req, res) => {
 
     const anonymize = req.query.anonymize === 'true';
 
-    const headers = ["ID", "Fecha", "Nombre", "DNI", "Sexo", "Procedencia", "ASA", "Indicación", "Procedimientos", "Conclusión"];
+    const headers = ["ID", "Fecha", "Nombre", "DNI", "Sexo", "País", "Procedencia", "Localidad", "ASA", "Indicación", "Procedimientos", "Conclusión"];
     const rows = studiesResult.rows.map(r => {
       const payload = r.payload || {};
       const metadata = payload.metadata || {};
@@ -213,7 +213,9 @@ app.get('/studies/export/csv', authMiddleware, async (req, res) => {
         anonymize ? '******' : r.nombre,
         anonymize ? '******' : r.dni,
         r.sexo,
+        r.pais || 'Honduras',
         `${r.municipio || ''}, ${r.departamento || ''}`,
+        r.localidad || '',
         clinical.asa || '',
         metadata.indicacion || '',
         (payload.procedimientos || []).map(p => p.description).join(" | "),
@@ -259,8 +261,10 @@ app.get('/studies/:id', authMiddleware, async (req, res) => {
       dni: row.dni,
       fnacimiento: row.fnacimiento,
       sexo: row.sexo,
+      pais: row.pais,
       departamento: row.departamento,
       municipio: row.municipio,
+      localidad: row.localidad,
       antecedentes: row.antecedentes
     };
     payload.currentStudyId = row.id;
@@ -293,21 +297,21 @@ app.post('/studies', authMiddleware, async (req, res) => {
         patientId = pRes.rows[0].id;
         // Update patient info
         await pgClient.query(
-          'UPDATE patients SET nombre=$1, fnacimiento=$2, sexo=$3, departamento=$4, municipio=$5, antecedentes=$6, updated_at=now() WHERE id=$7',
-          [patientData.nombre, patientData.fnacimiento, patientData.sexo, patientData.departamento, patientData.municipio, patientData.antecedentes, patientId]
+          'UPDATE patients SET nombre=$1, fnacimiento=$2, sexo=$3, pais=$4, departamento=$5, municipio=$6, localidad=$7, antecedentes=$8, updated_at=now() WHERE id=$9',
+          [patientData.nombre, patientData.fnacimiento, patientData.sexo, patientData.pais || 'Honduras', patientData.departamento, patientData.municipio, patientData.localidad, patientData.antecedentes, patientId]
         );
       } else {
         const pIns = await pgClient.query(
-          'INSERT INTO patients (dni, nombre, fnacimiento, sexo, departamento, municipio, antecedentes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-          [patientData.dni, patientData.nombre, patientData.fnacimiento, patientData.sexo, patientData.departamento, patientData.municipio, patientData.antecedentes]
+          'INSERT INTO patients (dni, nombre, fnacimiento, sexo, pais, departamento, municipio, localidad, antecedentes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+          [patientData.dni, patientData.nombre, patientData.fnacimiento, patientData.sexo, patientData.pais || 'Honduras', patientData.departamento, patientData.municipio, patientData.localidad, patientData.antecedentes]
         );
         patientId = pIns.rows[0].id;
       }
     } else {
         // Without DNI - create anyway
         const pIns = await pgClient.query(
-          'INSERT INTO patients (dni, nombre, fnacimiento, sexo, departamento, municipio, antecedentes) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-          [`TEMPDNI-${Date.now()}`, patientData.nombre, patientData.fnacimiento, patientData.sexo, patientData.departamento, patientData.municipio, patientData.antecedentes]
+          'INSERT INTO patients (dni, nombre, fnacimiento, sexo, pais, departamento, municipio, localidad, antecedentes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+          [`TEMPDNI-${Date.now()}`, patientData.nombre, patientData.fnacimiento, patientData.sexo, patientData.pais || 'Honduras', patientData.departamento, patientData.municipio, patientData.localidad, patientData.antecedentes]
         );
         patientId = pIns.rows[0].id;
     }

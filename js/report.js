@@ -345,7 +345,7 @@ function generateReport(skipSave = false, force = false) {
             </div>` : ''}
 
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 0.95rem;">
-                <tr style="background: #f9fafb; border: 1px solid #eee;">
+                <tr style="border: 1px solid #eee;">
                     <td style="padding: 10px; font-weight: bold; width: 120px;">PACIENTE:</td>
                     <td style="padding: 10px; border-right: 1px solid #eee;">${state.patient.nombre || 'No registro'}</td>
                     <td style="padding: 10px; font-weight: bold; width: 100px;">DNI:</td>
@@ -354,20 +354,26 @@ function generateReport(skipSave = false, force = false) {
                 <tr style="border: 1px solid #eee;">
                     <td style="padding: 10px; font-weight: bold;">F. NACIMIENTO:</td>
                     <td style="padding: 10px; border-right: 1px solid #eee;">${state.patient.fnacimiento ? formatDate(state.patient.fnacimiento) : '-'} (${state.patient.edad ? state.patient.edad + ' años' : '-'})</td>
-                    <td style="padding: 10px; font-weight: bold;">SEXO / PROC:</td>
-                    <td style="padding: 10px;">${state.patient.sexo || '-'} / ${state.patient.municipio ? state.patient.municipio + ', ' : ''}${state.patient.departamento || '-'}</td>
+                    <td style="padding: 10px; font-weight: bold;">PROCEDENCIA:</td>
+                    <td style="padding: 10px;">${state.patient.pais === 'Honduras' ? 
+                        ((state.patient.municipio ? state.patient.municipio + ', ' : '') + (state.patient.departamento || 'Honduras')) : 
+                        ((state.patient.localidad ? state.patient.localidad + ', ' : '') + (state.patient.pais || '-'))}</td>
                 </tr>
                 <tr style="border: 1px solid #eee;">
+                    <td style="padding: 10px; font-weight: bold;">SEXO:</td>
+                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.patient.sexo || '-'}</td>
                     <td style="padding: 10px; font-weight: bold;">MÉDICO REF:</td>
-                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.clinical.referente || 'No especificado'}</td>
-                    <td style="padding: 10px; font-weight: bold;">INDICACIÓN:</td>
-                    <td style="padding: 10px;">${state.metadata.indicacion || 'Escrutinio'}</td>
+                    <td style="padding: 10px;">${state.clinical.referente || 'No especificado'}</td>
                 </tr>
                 <tr style="border: 1px solid #eee;">
+                    <td style="padding: 10px; font-weight: bold;">INDICACIÓN:</td>
+                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.metadata.indicacion || 'Escrutinio'}</td>
                     <td style="padding: 10px; font-weight: bold;">SEDACIÓN:</td>
-                    <td style="padding: 10px; border-right: 1px solid #eee;">${state.metadata.sedacion || 'Ninguna'}${state.metadata.sedacionPor && state.metadata.sedacion !== 'Tópica / Ninguna' && state.metadata.sedacion !== '' ? ' (' + state.metadata.sedacionPor + ')' : ''}</td>
+                    <td style="padding: 10px;">${state.metadata.sedacion || 'Ninguna'}${state.metadata.sedacionPor && state.metadata.sedacion !== 'Tópica / Ninguna' && state.metadata.sedacion !== '' ? ' (' + state.metadata.sedacionPor + ')' : ''}</td>
+                </tr>
+                <tr style="border: 1px solid #eee;">
                     <td style="padding: 10px; font-weight: bold;">EXTENSIÓN:</td>
-                    <td style="padding: 10px;">${state.metadata.extension || 'Duodeno D2'}</td>
+                    <td style="padding: 10px;" colspan="3">${state.metadata.extension || 'Duodeno D2'}</td>
                 </tr>
                 <tr style="border: 1px solid #eee;">
                     <td style="padding: 10px; font-weight: bold;">ANTECEDENTES:</td>

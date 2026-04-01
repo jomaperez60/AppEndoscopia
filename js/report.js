@@ -27,32 +27,32 @@ function formatClinicalNarrative(organ, findings) {
     }
 
     const verbs = [
-        "se evidencia", 
-        "se identifica claramente", 
-        "se observa", 
-        "se aprecia", 
+        "se evidencia",
+        "se identifica claramente",
+        "se observa",
+        "se aprecia",
         "llama la atención la presencia de"
     ];
 
     const connectors = [
-        "; adicionalmente, ", 
-        ". Asimismo, ", 
-        "; por otra parte, ", 
+        "; adicionalmente, ",
+        ". Asimismo, ",
+        "; por otra parte, ",
         ". También "
     ];
 
     const sentences = findings.map((f, idx) => {
         const loc = f.location;
         const desc = cleanMstString(f.description);
-        
+
         if (!desc) return null;
 
         const verb = verbs[idx % verbs.length];
-        
+
         if (loc === 'General' || loc === 'Totalidad del órgano' || loc === 'Totalidad del esófago' || loc === 'Totalidad del estómago') {
             return `${verb} ${desc}`;
         }
-        
+
         if (idx % 2 === 0) {
             return `a nivel de ${loc.toLowerCase()} ${verb} ${desc}`;
         } else {
@@ -71,7 +71,7 @@ function formatClinicalNarrative(organ, findings) {
             combined += ".";
         }
     }
-    
+
     // Smooth out any syntax glitches
     combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.').replace(/, ,/g, ',');
     return combined.charAt(0).toUpperCase() + combined.slice(1);
@@ -79,17 +79,17 @@ function formatClinicalNarrative(organ, findings) {
 
 function formatProceduresNarrative(procedimientos) {
     if (!procedimientos || procedimientos.length === 0) return "";
-    
+
     const sentences = procedimientos.map(p => {
         let fullDesc = p.description;
         let organLoc = "";
-        
+
         if (fullDesc.includes(': ')) {
             const parts = fullDesc.split(': ');
             organLoc = parts[0].trim();
             fullDesc = parts.slice(1).join(': ').trim();
         }
-        
+
         let items = fullDesc.split(' - ').map(s => s.trim()).filter(s => {
             const sl = s.toLowerCase();
             return sl !== 'diagnósticos' && sl !== 'terapéuticos';
@@ -99,7 +99,7 @@ function formatProceduresNarrative(procedimientos) {
 
         let procName = items[0];
         let attributes = items.slice(1);
-        
+
         let subLoc = "la lesión";
         let method = "";
         let purpose = "";
@@ -127,7 +127,7 @@ function formatProceduresNarrative(procedimientos) {
 
         let sentence = "";
         const nameL = procName.toLowerCase();
-        
+
         // Fluid Medical Phrasing
         if (nameL.includes('biopsia')) {
             sentence = `se efectuó la toma de biopsias dirigidas a nivel de ${subLoc}`;
@@ -167,7 +167,7 @@ function formatProceduresNarrative(procedimientos) {
     }).filter(s => s !== null);
 
     if (sentences.length === 0) return "";
-    
+
     let narrative = "";
     if (sentences.length === 1) {
         narrative = sentences[0];
@@ -177,7 +177,7 @@ function formatProceduresNarrative(procedimientos) {
         const last = sentences.pop();
         narrative = sentences.join("; ") + "; y en una última instancia, " + last;
     }
-    
+
     let combined = narrative + ".";
     // Polish
     combined = combined.replace(/\s+/g, ' ').replace(/\. \./g, '.').replace(/ ,/g, ',');
@@ -257,7 +257,7 @@ function runLinterChecks() {
     }
 
     // INDICADORES DE CALIDAD GLOBALES (ASGE / ESGE)
-    
+
     // Fotodocumentación Mínima
     if (state.images.length < 4) {
         // No duplicar la alerta si el tumor ya la lanzó
@@ -309,8 +309,8 @@ function generateReport(skipSave = false, force = false) {
         findingsHtml = '<p>Examen endoscópico dentro de los límites de la normalidad.</p>';
     } else {
         const byOrgan = { 'Exploración': [], 'Esófago': [], 'Estómago': [], 'Duodeno': [], 'Yeyuno': [] };
-        state.findings.forEach(f => { if(byOrgan[f.organ]) byOrgan[f.organ].push(f); });
-        
+        state.findings.forEach(f => { if (byOrgan[f.organ]) byOrgan[f.organ].push(f); });
+
         ['Exploración', 'Esófago', 'Estómago', 'Duodeno', 'Yeyuno'].forEach(org => {
             const organFindings = byOrgan[org];
             if (organFindings && (organFindings.length > 0 || org !== 'Yeyuno')) {
@@ -378,9 +378,9 @@ function generateReport(skipSave = false, force = false) {
                 <tr style="border: 1px solid #eee;">
                     <td style="padding: 10px; font-weight: bold;">TERAPIA ANTIAGREG.:</td>
                     <td style="padding: 10px;" colspan="3">
-                        ${state.clinical.anticoagulante === 'Sí' ? 
-                            `<span style="color: #b45309; font-weight: 600;">Sí activa</span> (${state.clinical.antiTipo || 'Desc.'} - Suspendida: ${state.clinical.antiDias || 0} días previos)` 
-                            : 'Ninguna reportada'}
+                        ${state.clinical.anticoagulante === 'Sí' ?
+            `<span style="color: #b45309; font-weight: 600;">Sí activa</span> (${state.clinical.antiTipo || 'Desc.'} - Suspendida: ${state.clinical.antiDias || 0} días previos)`
+            : 'Ninguna reportada'}
                     </td>
                 </tr>
             </table>
@@ -502,7 +502,7 @@ function generateReport(skipSave = false, force = false) {
     body.innerHTML = html;
     modal.classList.add('active');
 
-    if(!skipSave) saveToHistory();
+    if (!skipSave) saveToHistory();
 }
 
 function closeReport() { document.getElementById('report-modal').classList.remove('active'); }

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dateFormat: "d-m-Y",
         locale: "es",
         allowInput: true,
-        onChange: function(selectedDates, dateStr) {
+        onChange: function (selectedDates, dateStr) {
             calculateAge(dateStr);
             state.patient.fnacimiento = dateStr;
         }
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ['indicacion', 'sedacion', 'sedacion-por', 'instrumento', 'extension'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) {
+        if (el) {
             const stateKey = id === 'sedacion-por' ? 'sedacionPor' : id;
             el.addEventListener(id === 'indicacion' ? 'input' : 'change', (e) => {
                 state.metadata[stateKey] = e.target.value;
@@ -35,22 +35,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ['referente', 'asa', 'anticoagulante', 'preparacion'].forEach(id => {
         const el = document.getElementById(`clinico-${id}`);
-        if(el) {
+        if (el) {
             el.addEventListener(id === 'referente' ? 'input' : 'change', (e) => state.clinical[id] = e.target.value);
         }
     });
 
     // New clinical fields
     const antiTipoEl = document.getElementById('clinico-anti-tipo');
-    if(antiTipoEl) antiTipoEl.addEventListener('change', (e) => state.clinical.antiTipo = e.target.value);
-    
+    if (antiTipoEl) antiTipoEl.addEventListener('change', (e) => state.clinical.antiTipo = e.target.value);
+
     const antiDiasEl = document.getElementById('clinico-anti-dias');
-    if(antiDiasEl) antiDiasEl.addEventListener('input', (e) => state.clinical.antiDias = e.target.value);
+    if (antiDiasEl) antiDiasEl.addEventListener('input', (e) => state.clinical.antiDias = e.target.value);
 
     // New metadata fields
     ['traz-procesador', 'traz-cana', 'traz-lavado'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) {
+        if (el) {
             const stateKey = id.replace(/-([a-z])/g, g => g[1].toUpperCase()); // trazProcesador
             el.addEventListener('input', (e) => state.metadata[stateKey] = e.target.value);
         }
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // AE Checkboxes
     ['ae-hipo', 'ae-bradi', 'ae-perf', 'ae-sang'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) {
+        if (el) {
             const stateKey = id.replace(/-([a-z])/g, g => g[1].toUpperCase()); // aeHipo
             el.addEventListener('change', (e) => state.quality[stateKey] = e.target.checked);
         }
@@ -67,12 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ['consentimiento', 'fotos', 'completa', 'tiempo'].forEach(id => {
         const el = document.getElementById(`calidad-${id}`);
-        if(el) el.addEventListener('change', (e) => state.quality[id] = e.target.value);
+        if (el) el.addEventListener('change', (e) => state.quality[id] = e.target.value);
     });
 
     ['nombre', 'dni', 'fnacimiento', 'sexo', 'antecedentes', 'alergias'].forEach(field => {
         const el = document.getElementById(`paciente-${field}`);
-        if(el) {
+        if (el) {
             ['input', 'change'].forEach(ev => {
                 el.addEventListener(ev, (e) => {
                     state.patient[field] = e.target.value;
@@ -83,17 +83,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const planEl = document.getElementById('plan');
-    if(planEl) planEl.addEventListener('input', (e) => state.plan = e.target.value);
-    
+    if (planEl) planEl.addEventListener('input', (e) => state.plan = e.target.value);
+
     const histEl = document.getElementById('histology-text');
-    if(histEl) histEl.addEventListener('input', (e) => state.histology = e.target.value);
-    
+    if (histEl) histEl.addEventListener('input', (e) => state.histology = e.target.value);
+
     const diagFinalEl = document.getElementById('diag-final');
-    if(diagFinalEl) diagFinalEl.addEventListener('input', (e) => state.metadata.diagFinal = e.target.value);
+    if (diagFinalEl) diagFinalEl.addEventListener('input', (e) => state.metadata.diagFinal = e.target.value);
 
     const deptoSelect = document.getElementById('paciente-departamento');
     const muniSelect = document.getElementById('paciente-municipio');
-    
+
     if (deptoSelect && typeof hondurasGeo !== 'undefined') {
         Object.keys(hondurasGeo).sort().forEach(depto => {
             const opt = document.createElement('option');
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deptoSelect.addEventListener('change', (e) => {
             state.patient.departamento = e.target.value;
             state.patient.municipio = '';
-            
+
             muniSelect.innerHTML = '<option value="">Seleccione Municipio...</option>';
             if (e.target.value) {
                 muniSelect.disabled = false;
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 muniSelect.disabled = true;
             }
         });
-        
+
         muniSelect.addEventListener('change', (e) => {
             state.patient.municipio = e.target.value;
         });
@@ -128,12 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile Menu Toggle
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const sideNav = document.querySelector('.sidebar nav');
-    if(mobileMenuToggle && sideNav) {
+    if (mobileMenuToggle && sideNav) {
         mobileMenuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             sideNav.classList.toggle('active');
             const icon = mobileMenuToggle.querySelector('i');
-            if(sideNav.classList.contains('active')) {
+            if (sideNav.classList.contains('active')) {
                 icon.classList.replace('fa-bars', 'fa-times');
             } else {
                 icon.classList.replace('fa-times', 'fa-bars');
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 mobileMenuToggle.querySelector('i').classList.replace('fa-times', 'fa-bars');
             }
         });
-        
+
         // Close menu when clicking a nav item
         sideNav.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -162,10 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function resetForm() {
-    if(!confirm("¿Desea limpiar el formulario para un nuevo estudio? Se perderán los datos no guardados.")) return;
-    
+    if (!confirm("¿Desea limpiar el formulario para un nuevo estudio? Se perderán los datos no guardados.")) return;
+
     state.currentStudyId = null;
-    state.patient = { nombre:'', dni:'', fnacimiento:'', sexo:'', departamento:'', municipio:'', antecedentes:'', alergias:'', edad:'' };
+    state.patient = { nombre: '', dni: '', fnacimiento: '', sexo: '', departamento: '', municipio: '', antecedentes: '', alergias: '', edad: '' };
     state.clinical = { referente: '', asa: 'ASA I (Normal, sano)', anticoagulante: 'No', antiTipo: 'Aspirina', antiDias: '', preparacion: 'Adecuado (Ayuno > 8h)' };
     state.metadata = { indicacion: '', sedacion: 'Sedación Consciente', sedacionPor: 'Gastroenterólogo', instrumento: 'Olympus', trazProcesador: '', trazCana: '', trazLavado: '', extension: 'Duodeno D2' };
     state.quality = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos', aeHipo: false, aeBradi: false, aePerf: false, aeSang: false };
@@ -177,21 +177,21 @@ function resetForm() {
 
     // Reset UI
     document.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(el => {
-        if(!el.id.startsWith('login-')) {
-            if(el.type === 'checkbox') el.checked = false;
+        if (!el.id.startsWith('login-')) {
+            if (el.type === 'checkbox') el.checked = false;
             else el.value = (el.tagName === 'SELECT') ? el.options[0]?.value || '' : '';
         }
     });
-    
+
     // Re-set defaults for selects
     ['asa', 'anticoagulante', 'preparacion'].forEach(id => {
         const el = document.getElementById(`clinico-${id}`);
-        if(el) el.value = state.clinical[id];
+        if (el) el.value = state.clinical[id];
     });
     const qualityDefaults = { consentimiento: 'Sí, obtenido y firmado', fotos: 'Estándar (≥ 10 fotos)', completa: 'Sí (incluye retrovisión)', tiempo: '≥ 7 minutos' };
     Object.keys(qualityDefaults).forEach(id => {
         const el = document.getElementById(`calidad-${id}`);
-        if(el) el.value = qualityDefaults[id];
+        if (el) el.value = qualityDefaults[id];
     });
 
     document.getElementById('anti-detalles').style.display = 'none';
@@ -211,30 +211,30 @@ function resetForm() {
     switchMainView('new');
 }
 
-window.updateAntecedentesText = function() {
+window.updateAntecedentesText = function () {
     const enfTags = Array.from(document.querySelectorAll('.ant-enf-cb:checked')).map(cb => cb.value);
     const enfOtros = document.getElementById('ant-enf-otros').value.trim();
-    if(enfOtros) enfTags.push(enfOtros);
-    
+    if (enfOtros) enfTags.push(enfOtros);
+
     let enfText = enfTags.length > 0 ? "Enfermedades: " + enfTags.join(", ") : "";
 
     const cirTags = Array.from(document.querySelectorAll('.ant-cir-cb:checked')).map(cb => {
-        if(cb.value === "Anastomosis gástrica") return "Anastomosis gástrica (" + document.getElementById('sel-anastomosis').value + ")";
-        if(cb.value === "Cirugía bariátrica") return "Cirugía bariátrica (" + document.getElementById('sel-bariatrica').value + ")";
+        if (cb.value === "Anastomosis gástrica") return "Anastomosis gástrica (" + document.getElementById('sel-anastomosis').value + ")";
+        if (cb.value === "Cirugía bariátrica") return "Cirugía bariátrica (" + document.getElementById('sel-bariatrica').value + ")";
         return cb.value;
     });
     const cirOtros = document.getElementById('ant-cir-otros').value.trim();
-    if(cirOtros) cirTags.push(cirOtros);
-    
+    if (cirOtros) cirTags.push(cirOtros);
+
     let cirText = cirTags.length > 0 ? "Cirugías previas: " + cirTags.join(", ") : "";
 
     let combined = [enfText, cirText].filter(t => t).join("\n");
-    
+
     const hiddenTextarea = document.getElementById('paciente-antecedentes');
-    if(hiddenTextarea) {
+    if (hiddenTextarea) {
         hiddenTextarea.value = combined;
         // Trigger event to update state and topbar manually
         state.patient.antecedentes = combined;
-        if(typeof updateTopbar === 'function') updateTopbar();
+        if (typeof updateTopbar === 'function') updateTopbar();
     }
 };

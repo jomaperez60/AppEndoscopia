@@ -1,7 +1,7 @@
 // --- History & Database Logic ---
 
 async function saveToHistory() {
-    if(!state.patient.nombre) {
+    if (!state.patient.nombre) {
         alert("Por favor, ingrese al menos el nombre del paciente para guardar.");
         return;
     }
@@ -11,7 +11,7 @@ async function saveToHistory() {
         alert("Debe iniciar sesión para guardar estudios.");
         return;
     }
-    
+
     const record = {
         currentStudyId: state.currentStudyId,
         patient: { ...state.patient },
@@ -21,9 +21,9 @@ async function saveToHistory() {
         diagnoses: document.getElementById('diag-final')?.value || '',
         plan: state.plan,
         histology: document.getElementById('histology-text')?.value || state.histology || '',
-        findings: [ ...state.findings ],
-        procedimientos: [ ...state.procedimientos ],
-        images: [ ...state.images ]
+        findings: [...state.findings],
+        procedimientos: [...state.procedimientos],
+        images: [...state.images]
     };
 
     try {
@@ -35,9 +35,9 @@ async function saveToHistory() {
             },
             body: JSON.stringify(record)
         });
-        
+
         const data = await res.json();
-        
+
         if (res.ok) {
             state.currentStudyId = data.studyId;
             console.log(`Estudio guardado. Versión: ${data.version}`);
@@ -55,7 +55,7 @@ async function saveToHistory() {
 async function renderHistory(filter = "") {
     const body = document.getElementById('history-table-body');
     const emptyState = document.getElementById('history-empty-state');
-    if(!body) return;
+    if (!body) return;
 
     const token = sessionStorage.getItem('endo_token');
     if (!token) return;
@@ -112,13 +112,13 @@ async function loadFromHistory(id, silent = false) {
     const token = sessionStorage.getItem('endo_token');
     if (!token) return;
 
-    if(!silent) {
-        if(state.currentUser?.role !== 'admin') {
+    if (!silent) {
+        if (state.currentUser?.role !== 'admin') {
             alert("Solo los administradores pueden editar estudios guardados.");
             return;
         }
-        if(!confirm("AVISO HIPAA: Va a cargar un estudio con información protegida (PHI). Esta acción será auditada.\n\n¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
-        
+        if (!confirm("AVISO HIPAA: Va a cargar un estudio con información protegida (PHI). Esta acción será auditada.\n\n¿Desea cargar este estudio para edición? Se reemplazarán los datos actuales.")) return;
+
         console.warn(`[AUDIT LOG] Usuario ${state.currentUser?.username} cargó estudio ${id} para edición a las ${new Date().toISOString()}`);
     }
 
@@ -126,12 +126,12 @@ async function loadFromHistory(id, silent = false) {
         const res = await fetch(`${CONFIG.API_BASE_URL}/studies/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
             alert("No se encontró el registro seleccionado (o error de servidor).");
             return;
         }
-        
+
         const record = await res.json();
 
         // 1. Restore State
@@ -179,18 +179,18 @@ async function loadFromHistory(id, silent = false) {
 
         Object.keys(fieldMap).forEach(key => {
             const el = document.getElementById(key);
-            if(el) el.value = fieldMap[key] || '';
+            if (el) el.value = fieldMap[key] || '';
         });
 
         const antiDetalles = document.getElementById('anti-detalles');
-        if(antiDetalles) {
+        if (antiDetalles) {
             antiDetalles.style.display = state.clinical.anticoagulante === 'Sí' ? 'block' : 'none';
         }
 
         ['ae-hipo', 'ae-bradi', 'ae-perf', 'ae-sang'].forEach(id => {
             const stateKey = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
             const el = document.getElementById(id);
-            if(el) el.checked = state.quality[stateKey] === true;
+            if (el) el.checked = state.quality[stateKey] === true;
         });
 
         const sedacionAplicadaBlock = document.getElementById('sedacion-aplicada');
@@ -204,7 +204,7 @@ async function loadFromHistory(id, silent = false) {
         const cirOtrosEl = document.getElementById('ant-cir-otros');
         if (enfOtrosEl) enfOtrosEl.value = '';
         if (cirOtrosEl) cirOtrosEl.value = '';
-        
+
         if (state.patient.antecedentes) {
             const ant = state.patient.antecedentes;
             document.querySelectorAll('.ant-enf-cb, .ant-cir-cb').forEach(cb => {
@@ -226,12 +226,12 @@ async function loadFromHistory(id, silent = false) {
 
         // Special handling for geography
         const deptoSelect = document.getElementById('paciente-departamento');
-        if(deptoSelect && state.patient.departamento) {
+        if (deptoSelect && state.patient.departamento) {
             deptoSelect.value = state.patient.departamento;
             deptoSelect.dispatchEvent(new Event('change'));
             setTimeout(() => {
                 const muniSelect = document.getElementById('paciente-municipio');
-                if(muniSelect) {
+                if (muniSelect) {
                     muniSelect.value = record.patient.municipio || '';
                     state.patient.municipio = record.patient.municipio || '';
                 }
@@ -243,12 +243,12 @@ async function loadFromHistory(id, silent = false) {
         updateFindingsList();
         updateProcedimientosList();
         renderGallery();
-        
-        if(!silent) switchMainView('new');
+
+        if (!silent) switchMainView('new');
 
     } catch (e) {
         console.error("Critical error loading history:", e);
-        if(!silent) alert("Hubo un error al sincronizar los datos. Algunos campos podrían no haberse cargado correctamente.");
+        if (!silent) alert("Hubo un error al sincronizar los datos. Algunos campos podrían no haberse cargado correctamente.");
     }
 }
 
@@ -258,11 +258,11 @@ async function deleteFromHistory(id) {
     const token = sessionStorage.getItem('endo_token');
     if (!token) return;
 
-    if(state.currentUser?.role !== 'admin') {
+    if (state.currentUser?.role !== 'admin') {
         alert("Solo los administradores pueden eliminar estudios.");
         return;
     }
-    if(confirm("¿Eliminar este registro de forma permanente?")) {
+    if (confirm("¿Eliminar este registro de forma permanente?")) {
         try {
             const res = await fetch(`${CONFIG.API_BASE_URL}/studies/${id}`, {
                 method: 'DELETE',
@@ -287,7 +287,7 @@ function exportToCSV() {
     const token = sessionStorage.getItem('endo_token');
     if (!token) return;
 
-    if(state.currentUser?.role !== 'admin') {
+    if (state.currentUser?.role !== 'admin') {
         alert("Solo los administradores pueden exportar el historial.");
         return;
     }
@@ -298,40 +298,40 @@ function exportToCSV() {
     fetch(`${CONFIG.API_BASE_URL}/studies/export/csv${queryStr}`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Error en servidor al exportar CSV");
-        return res.text();
-    })
-    .then(csv => {
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        const prefix = anonymize ? 'Anonimizado' : 'Sensible';
-        link.download = `Endoscopia_${prefix}_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-    })
-    .catch(e => {
-        console.error("Error exportando CSV:", e);
-        alert("Hubo un error al exportar como Excel.");
-    });
+        .then(res => {
+            if (!res.ok) throw new Error("Error en servidor al exportar CSV");
+            return res.text();
+        })
+        .then(csv => {
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            const prefix = anonymize ? 'Anonimizado' : 'Sensible';
+            link.download = `Endoscopia_${prefix}_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        })
+        .catch(e => {
+            console.error("Error exportando CSV:", e);
+            alert("Hubo un error al exportar como Excel.");
+        });
 }
 
 async function newStudyFromHistory(id) {
     const token = sessionStorage.getItem('endo_token');
     if (!token) return;
 
-    if(!confirm("¿Desea crear un nuevo estudio clínico para este paciente? Su información personal se copiará a un formulario nuevo y en blanco.")) return;
+    if (!confirm("¿Desea crear un nuevo estudio clínico para este paciente? Su información personal se copiará a un formulario nuevo y en blanco.")) return;
 
     try {
         const res = await fetch(`${CONFIG.API_BASE_URL}/studies/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
             alert("Error al cargar datos del paciente.");
             return;
         }
-        
+
         const record = await res.json();
 
         // Limpiar estado preparándolo para un nuevo estudio, preservando datos demográficos
@@ -350,7 +350,7 @@ async function newStudyFromHistory(id) {
         const fieldsToClear = ['clinico-referente', 'indicacion', 'sedacion', 'sedacion-por', 'instrumento', 'extension', 'diag-final', 'plan', 'histology-text'];
         fieldsToClear.forEach(fid => {
             const el = document.getElementById(fid);
-            if(el) el.value = '';
+            if (el) el.value = '';
         });
 
         // Poblar datos personales
@@ -364,16 +364,16 @@ async function newStudyFromHistory(id) {
 
         Object.keys(fieldMap).forEach(key => {
             const el = document.getElementById(key);
-            if(el) el.value = fieldMap[key] || '';
+            if (el) el.value = fieldMap[key] || '';
         });
 
         const deptoSelect = document.getElementById('paciente-departamento');
-        if(deptoSelect && state.patient.departamento) {
+        if (deptoSelect && state.patient.departamento) {
             deptoSelect.value = state.patient.departamento;
             deptoSelect.dispatchEvent(new Event('change'));
             setTimeout(() => {
                 const muniSelect = document.getElementById('paciente-municipio');
-                if(muniSelect) muniSelect.value = state.patient.municipio || '';
+                if (muniSelect) muniSelect.value = state.patient.municipio || '';
             }, 50);
         }
 
@@ -383,9 +383,9 @@ async function newStudyFromHistory(id) {
         updateProcedimientosList();
         renderGallery();
         document.getElementById('current-diag-preview').innerText = '';
-        
-        if(typeof switchMainView === 'function') switchMainView('new');
-        
+
+        if (typeof switchMainView === 'function') switchMainView('new');
+
     } catch (e) {
         console.error("Error creating new study from patient:", e);
         alert("Hubo un error al preparar el nuevo estudio.");

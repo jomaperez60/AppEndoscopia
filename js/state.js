@@ -1,7 +1,7 @@
 const CONFIG = {
     // API_BASE_URL: 'https://endohn.netlify.app' // Producción
-    API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:3000' 
+    API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
         : 'https://endohn.netlify.app'
 };
 
@@ -62,7 +62,7 @@ let isDraggingTag = false;
 
 function calculateAge(dateString) {
     if (!dateString) { state.patient.edad = ''; updateTopbar(); return; }
-    
+
     let birthDate;
     const parts = dateString.split(/[-/]/);
     if (parts.length === 3) {
@@ -74,7 +74,7 @@ function calculateAge(dateString) {
     } else {
         birthDate = new Date(dateString);
     }
-    
+
     if (isNaN(birthDate.getTime())) { state.patient.edad = ''; updateTopbar(); return; }
 
     const today = new Date();
@@ -88,22 +88,22 @@ function calculateAge(dateString) {
 function formatDate(dateInput) {
     if (!dateInput) return '-';
     const val = String(dateInput).trim();
-    
+
     // 1. Handle DD-MM-YYYY or DD/MM/YYYY (Latin)
     const dmyMatch = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/.exec(val);
     if (dmyMatch) {
-         return `${dmyMatch[1].padStart(2, '0')}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[3]}`;
+        return `${dmyMatch[1].padStart(2, '0')}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[3]}`;
     }
 
     // 2. Handle ISO YYYY-MM-DD (Input Date)
     const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(val);
     if (isoMatch) {
-         return `${isoMatch[3]}-${isoMatch[2]}-${isoMatch[1]}`;
+        return `${isoMatch[3]}-${isoMatch[2]}-${isoMatch[1]}`;
     }
 
     const d = new Date(dateInput);
     if (isNaN(d.getTime())) return val;
-    
+
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const year = d.getFullYear();

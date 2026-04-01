@@ -41,7 +41,7 @@ const state = {
     selectedImageIndex: null,
     // Video Capture Settings
     captureDeviceId: '',
-    captureCrop: { x: 10, y: 10, width: 80, height: 80 }, // Porcentaje
+    captureCrop: JSON.parse(localStorage.getItem('endo_capture_crop') || '{"x": 10, "y": 10, "width": 80, "height": 80}'), // Porcentaje
     captureKey: 'F12', // Tecla por defecto (común en software médico)
     isCapturing: false,
     history: JSON.parse(localStorage.getItem('endo_history') || '[]'),

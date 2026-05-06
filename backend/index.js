@@ -11,6 +11,13 @@ const db = require('./db');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+// Netlify redirects often proxy API calls under /api/*.
+// Normalize path so backend routes work with and without /api prefix.
+app.use((req, _res, next) => {
+  if (req.url === '/api') req.url = '/';
+  else if (req.url.startsWith('/api/')) req.url = req.url.slice(4);
+  next();
+});
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {

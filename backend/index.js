@@ -3,15 +3,19 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
+const path = require('path');
 
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const db = require('./db');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('Missing JWT_SECRET environment variable. Set it in backend/.env (local) or deployment secrets.');
+}
 
 // Auth Middleware
 const authMiddleware = async (req, res, next) => {

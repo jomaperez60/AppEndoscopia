@@ -15,6 +15,14 @@ Una herramienta clínica avanzada para facilitar la creación estructurada de re
 
 Este proyecto se despliega de manera automática y gratuita utilizando [Netlify](https://www.netlify.com), que impulsa con gran rapidez la conectividad de la aplicación visual.
 
+## Configuración segura local
+
+1. Copia `backend/.env.example` a `backend/.env`.
+2. Configura valores reales para `DATABASE_URL`, `JWT_SECRET` y `DEFAULT_ADMIN_PASSWORD`.
+3. Nunca subas `backend/.env` al repositorio.
+4. Ejecuta `node backend/init_db.js` para crear el usuario admin inicial con la contraseña definida en `DEFAULT_ADMIN_PASSWORD`.
+5. Cambia la contraseña del admin después del primer inicio de sesión.
+
 ## Licencia
 
 Este proyecto está bajo la Licencia MIT - mira el archivo [LICENSE](LICENSE) para más detalles.

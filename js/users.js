@@ -68,7 +68,7 @@ async function deleteUser(username) {
     if (confirm(`¿Está seguro de eliminar al usuario ${username}?`)) {
         const token = sessionStorage.getItem('endo_token');
         try {
-            const res = await fetch(`https://endohn.netlify.app/users/${username}`, {
+            const res = await fetch(`${CONFIG.API_BASE_URL}/users/${encodeURIComponent(username)}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -95,7 +95,7 @@ async function handleChangePassword() {
 
     const token = sessionStorage.getItem('endo_token');
     try {
-        const res = await fetch(`https://endohn.netlify.app/users/${userToPasswordChange}/password`, {
+        const res = await fetch(`${CONFIG.API_BASE_URL}/users/${encodeURIComponent(userToPasswordChange)}/password`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ newPassword: newPass })

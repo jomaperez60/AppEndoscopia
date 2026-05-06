@@ -2,7 +2,7 @@
 
 Una herramienta clínica avanzada para facilitar la creación estructurada de reportes endoscópicos.
 
-[![Deploys by Netlify](https://www.netlify.com/v3/img/components/netlify-color-bg.svg)](https://www.netlify.com)
+[![Deploys by Netlify](https://www.netlify.com/img/deploy/button.svg)](https://www.netlify.com)
 
 ## Características principales
 * Creación de reportes clínicos en formato estructurado de endoscopia.
